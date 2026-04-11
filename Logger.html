@@ -670,7 +670,7 @@
             overflow-y: auto;
             font-family: 'Courier New', monospace;
             font-size: 11px;
-            color: #00ff00;
+            color: #ffffff;
             scrollbar-width: thin;
             scrollbar-color: #ffb74d #2b2b2b;
         }
@@ -711,6 +711,14 @@
             color: #fff;
         }
 
+        .header-actions {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            flex-wrap: wrap;
+            justify-content: flex-end;
+        }
+
         .wifi-host-input {
             width: 150px;
             padding: 7px 9px;
@@ -740,13 +748,58 @@
             --btn-glow: rgba(79, 191, 115, 0.35);
         }
 
+        @media (max-width: 720px) {
+            body {
+                padding: 6px;
+            }
+
+            .container {
+                padding: 12px;
+            }
+
+            .header {
+                flex-direction: column;
+                align-items: stretch;
+                gap: 10px;
+            }
+
+            .header-actions {
+                width: 100%;
+                justify-content: stretch;
+            }
+
+            .wifi-host-input {
+                flex: 1 1 180px;
+                min-width: 0;
+                width: auto;
+                font-size: 14px;
+                padding: 10px 11px;
+            }
+
+            #wifiConnectBtn {
+                flex: 0 0 auto;
+                min-width: 104px;
+                font-size: 14px;
+                padding: 10px 12px;
+            }
+
+            .controls button {
+                font-size: 14px;
+                padding: 10px 12px;
+            }
+
+            .rc-panel {
+                justify-content: center;
+            }
+        }
+
     </style>
 </head>
 <body>
     <div class="container">
         <div class="header">
             <div class="title">Log Viewer</div>
-            <div style="display:flex; gap:10px; align-items:center;">
+            <div class="header-actions">
                 <input id="wifiHostInput" class="wifi-host-input" type="text" value="192.168.4.1" placeholder="UI IP or host">
                 <button class="btn-wifi" id="wifiConnectBtn" onclick="toggleWirelessLink()">WiFi OFF</button>
             </div>
@@ -854,6 +907,7 @@
         const SERIAL_BAUD_RATE = 230400;
         const MAX_CONSOLE_LINES = 300;
         const REALTIME_KEEP_FRAME_COUNT = 3;
+        const LOG_GAP_REFETCH_MAX_RETRIES = 3;
 
         let logs = [];
         let sensorNames = [LINE_SENSOR_KEY];
@@ -862,6 +916,8 @@
         let currentDataIndex = 0;
         let lastLogSequence = null;
         let sequenceGapCount = 0;
+        let csvGapRefetchSinceSequence = null;
+        let csvGapRefetchRetryCount = 0;
         let realtimeMode = false;
         let realtimeAwaitingResponse = false;
         let receivingLineState = false;
@@ -871,7 +927,8 @@
         let lineMonitorUsesRealtime = false;
         const RC_PAD_RADIUS = 75;
         const RC_STICK_RADIUS = 53;
-        const RC_SEND_INTERVAL_MS = 120;
+        const RC_SEND_INTERVAL_MS = 100;
+        const RC_KEEPALIVE_MS = 220;
         const RC_SPEED_SCALE = 0.5;
         const RC_KEYBOARD_MAGNITUDE = 68;
         const RC_EIGHT_DIR_MAGNITUDE = 72;
@@ -889,6 +946,7 @@
         let rcHasSentMove = false;
         let rcSendInFlight = false;
         let rcPendingMove = null;
+        let rcLastSentAtMs = 0;
         let rcKeyUp = false;
         let rcKeyDown = false;
         let rcKeyLeft = false;
@@ -927,6 +985,44 @@
             return logs.slice().sort(compareLogEntries);
         }
 
+        function getSortedFiniteSequences() {
+            return [...new Set(
+                logs
+                    .map(entry => Number.isFinite(entry.seq) ? entry.seq : null)
+                    .filter(seq => seq !== null)
+            )].sort((a, b) => a - b);
+        }
+
+        function countMissingSequences() {
+            const sequences = getSortedFiniteSequences();
+
+            if (sequences.length <= 1) {
+                return 0;
+            }
+
+            let missingCount = 0;
+            for (let i = 1; i < sequences.length; i++) {
+                const gap = sequences[i] - sequences[i - 1] - 1;
+                if (gap > 0) {
+                    missingCount += gap;
+                }
+            }
+            return missingCount;
+        }
+
+        function findFirstMissingSequence() {
+            const sequences = getSortedFiniteSequences();
+            if (sequences.length <= 1) {
+                return null;
+            }
+            for (let i = 1; i < sequences.length; i++) {
+                if (sequences[i] > sequences[i - 1] + 1) {
+                    return sequences[i - 1] + 1;
+                }
+            }
+            return null;
+        }
+
         function buildLogKey(entry) {
             if (Number.isFinite(entry.seq)) {
                 return `${entry.seq}|${entry.name}|${entry.timestamp}|${entry.value}`;
@@ -943,6 +1039,10 @@
             logs.push(entry);
             if (Number.isFinite(entry.seq)) {
                 if (lastLogSequence !== null && entry.seq > lastLogSequence + 1) {
+                    const refetchSince = Math.max(0, lastLogSequence);
+                    if (csvGapRefetchSinceSequence === null || refetchSince < csvGapRefetchSinceSequence) {
+                        csvGapRefetchSinceSequence = refetchSince;
+                    }
                     sequenceGapCount += entry.seq - lastLogSequence - 1;
                     addConsoleLog(`Log gap detected: missing ${entry.seq - lastLogSequence - 1} entry(s) before #${entry.seq}`);
                 }
@@ -1151,10 +1251,11 @@
 
         function getDistanceScaledLength(distance, displayRadius) {
             if (!Number.isFinite(distance)) {
-                return 35;
+                return 0;
             }
+            const midpointRadius = displayRadius - 10;
             const ratio = clamp(distance / (LINE_DIAMETER / 2), 0, 1);
-            return clamp(24 + ratio * (displayRadius - 28), 24, displayRadius - 10);
+            return ratio * midpointRadius;
         }
 
         function getPseudoLineHalf(displayRadius) {
@@ -1458,6 +1559,7 @@
             rcLastSentY = 0;
             rcSendInFlight = false;
             rcPendingMove = null;
+            rcLastSentAtMs = 0;
             stopRcSending();
             resetRcVector();
             const runRcBtn = document.getElementById('runRcBtn');
@@ -1659,6 +1761,7 @@
                     rcLastSentX = move.x;
                     rcLastSentY = move.y;
                     rcHasSentMove = true;
+                    rcLastSentAtMs = Date.now();
                 }
             } catch (error) {
                 if (rcPendingMove && rcPendingMove.showError) {
@@ -1674,6 +1777,14 @@
             const scaledY = Math.round(rcCurrentY * RC_SPEED_SCALE);
             const changed = !rcHasSentMove || scaledX !== rcLastSentX || scaledY !== rcLastSentY;
             if (!changed) {
+                const nonZero = (scaledX !== 0 || scaledY !== 0);
+                const keepAliveDue = (Date.now() - rcLastSentAtMs) >= RC_KEEPALIVE_MS;
+                if (!nonZero || !keepAliveDue) {
+                    return;
+                }
+            }
+
+            if (!rcMode && (scaledX !== 0 || scaledY !== 0)) {
                 return;
             }
 
@@ -1726,6 +1837,8 @@
             if (rcMode) {
                 resetRcVector();
                 rcHasSentMove = false;
+                rcLastSentAtMs = 0;
+                startRcSending();
                 if (wirelessConnected) {
                     await sendSerialCommand('run auto', false);
                 } else {
@@ -1743,8 +1856,10 @@
                 rcKeyDown = false;
                 rcKeyLeft = false;
                 rcKeyRight = false;
+                stopRcSending();
                 resetRcVector();
                 rcHasSentMove = false;
+                rcLastSentAtMs = 0;
                 try {
                     if (wirelessConnected) {
                         await sendSerialCommand('rc off', false);
@@ -2392,10 +2507,34 @@
             }
             if (trimmed === '[LOG_START_CSV]') {
                 receivingCSV = true;
+                receivingLineState = false;
                 return;
             }
             if (trimmed === '[LOG_END_CSV]') {
                 receivingCSV = false;
+                sequenceGapCount = countMissingSequences();
+                const firstMissingSequence = findFirstMissingSequence();
+
+                if (firstMissingSequence !== null && port && writer && !realtimeMode && csvGapRefetchRetryCount < LOG_GAP_REFETCH_MAX_RETRIES) {
+                    const retrySince = Math.max(0, firstMissingSequence - 1);
+                    csvGapRefetchSinceSequence = retrySince;
+                    csvGapRefetchRetryCount++;
+                    addConsoleLog(`Re-fetching missing logs from #${retrySince + 1} (attempt ${csvGapRefetchRetryCount}/${LOG_GAP_REFETCH_MAX_RETRIES})`);
+                    sendSerialCommand(`GETLOGS_CSV ${retrySince}`);
+                    return;
+                }
+                if (firstMissingSequence !== null && csvGapRefetchRetryCount >= LOG_GAP_REFETCH_MAX_RETRIES) {
+                    addConsoleLog(`Gap recovery failed after ${LOG_GAP_REFETCH_MAX_RETRIES} attempts. Please press Get Logs again.`);
+                    csvGapRefetchSinceSequence = null;
+                }
+                csvGapRefetchRetryCount = 0;
+                if (logs.some(entry => Number.isFinite(entry.seq))) {
+                    if (sequenceGapCount === 0) {
+                        addConsoleLog('Full log retrieval complete: all sequences are continuous.');
+                    } else {
+                        addConsoleLog(`Log retrieval finished with ${sequenceGapCount} missing sequence(s).`);
+                    }
+                }
                 realtimeAwaitingResponse = false;
                 activateLineViewIfAvailable();
                 updateSensorAfterReceive();
@@ -2417,6 +2556,8 @@
                 currentSensor = null;
                 lastLogSequence = null;
                 sequenceGapCount = 0;
+                csvGapRefetchSinceSequence = null;
+                csvGapRefetchRetryCount = 0;
                 receivedLogKeys = new Set();
                 renderSensorButtons();
                 updateDisplay();
@@ -2425,13 +2566,13 @@
             if (trimmed.startsWith('[LOG_STATUS]')) {
                 return;
             }
-            if (receivingLineState) {
-                parseLineStateLine(trimmed);
-                return;
-            }
             if (receivingCSV) {
                 if (trimmed.startsWith('timestamp') || trimmed.startsWith('i,')) return;
                 parseCSVLine(trimmed);
+                return;
+            }
+            if (receivingLineState) {
+                parseLineStateLine(trimmed);
                 return;
             }
             if (trimmed.startsWith('{') && trimmed.endsWith('}')) {
@@ -2584,14 +2725,9 @@
             addConsoleLog('No transport available (Serial/WiFi).');
         }
 
-        function requestLogs() {
+        async function requestLogs() {
             if (realtimeMode) {
                 addConsoleLog('Monitor mode is active: line status is already being streamed.');
-                return;
-            }
-            if (realtimeHistoryLogs.length > 0) {
-                addConsoleLog('Showing logs captured during Monitor mode.');
-                restoreRealtimeHistory();
                 return;
             }
             if (port && writer) {
@@ -2602,13 +2738,29 @@
                 receivingCSV = false;
                 lastLogSequence = null;
                 sequenceGapCount = 0;
+                csvGapRefetchSinceSequence = null;
+                csvGapRefetchRetryCount = 0;
                 receivedLogKeys = new Set();
+                receivingLineState = false;
+                realtimeAwaitingResponse = false;
                 lineMonitorUsesRealtime = false;
                 renderSensorButtons();
                 updateDisplay();
+                addConsoleLog('Loading full logs from device...');
+                try {
+                    // Ensure CSV response is not mixed with stale realtime stream state.
+                    await sendSerialCommand('REALTIME OFF', false);
+                } catch (error) {
+                    // If REALTIME OFF fails, still attempt CSV retrieval.
+                }
                 sendSerialCommand('GETLOGS_CSV');
             } else {
-                addConsoleLog('Serial disconnected. Connect serial first.');
+                if (realtimeHistoryLogs.length > 0) {
+                    addConsoleLog('Serial disconnected. Showing cached monitor logs only.');
+                    restoreRealtimeHistory();
+                } else {
+                    addConsoleLog('Serial disconnected. Connect serial first.');
+                }
             }
         }
 
@@ -2622,6 +2774,8 @@
                 currentDataIndex = 0;
                 lastLogSequence = null;
                 sequenceGapCount = 0;
+                csvGapRefetchSinceSequence = null;
+                csvGapRefetchRetryCount = 0;
                 receivedLogKeys = new Set();
                 lineMonitorUsesRealtime = false;
                 renderSensorButtons();
@@ -2687,6 +2841,7 @@
             updateSlider();
             updateRealtimeButton();
             updateRcStickVisual();
+            updateWirelessStatus(false);
             updateControlAvailability();
             const slider = document.getElementById('data-slider');
             slider.addEventListener('input', onSliderChange);
