@@ -871,14 +871,31 @@
         let lineMonitorUsesRealtime = false;
         const RC_PAD_RADIUS = 75;
         const RC_STICK_RADIUS = 53;
-        const RC_SEND_INTERVAL_MS = 90;
+        const RC_SEND_INTERVAL_MS = 120;
+        const RC_SPEED_SCALE = 0.5;
+        const RC_KEYBOARD_MAGNITUDE = 68;
+        const RC_EIGHT_DIR_MAGNITUDE = 72;
+        const RC_DEADZONE = 16;
+        const WIFI_HEALTHCHECK_MS = 1500;
+        const WIFI_HEALTHCHECK_FAIL_THRESHOLD = 2;
 
         let rcMode = false;
         let rcPointerActive = false;
         let rcCurrentX = 0;
         let rcCurrentY = 0;
         let rcSendTimer = null;
-        let rcZeroBurstRemain = 0;
+        let rcLastSentX = 0;
+        let rcLastSentY = 0;
+        let rcHasSentMove = false;
+        let rcSendInFlight = false;
+        let rcPendingMove = null;
+        let rcKeyUp = false;
+        let rcKeyDown = false;
+        let rcKeyLeft = false;
+        let rcKeyRight = false;
+        let wirelessHealthTimer = null;
+        let wirelessHealthBusy = false;
+        let wirelessHealthFailCount = 0;
 
         const sensorColors = {
             [LINE_SENSOR_KEY]: '#ff8b00'
@@ -1339,7 +1356,49 @@
             if (!wifiBtn) return;
             wifiBtn.classList.toggle('active', connected);
             wifiBtn.textContent = connected ? 'WiFi ON' : 'WiFi OFF';
+            if (connected) {
+                wirelessHealthFailCount = 0;
+                startWirelessHealthCheck();
+            } else {
+                stopWirelessHealthCheck();
+            }
             updateControlAvailability();
+        }
+
+        function stopWirelessHealthCheck() {
+            if (wirelessHealthTimer) {
+                clearInterval(wirelessHealthTimer);
+                wirelessHealthTimer = null;
+            }
+            wirelessHealthBusy = false;
+            wirelessHealthFailCount = 0;
+        }
+
+        function startWirelessHealthCheck() {
+            stopWirelessHealthCheck();
+            wirelessHealthTimer = setInterval(async () => {
+                if (!wirelessConnected || !wirelessBaseUrl) {
+                    return;
+                }
+                if (wirelessHealthBusy) {
+                    return;
+                }
+                wirelessHealthBusy = true;
+                try {
+                    const response = await fetch(wirelessBaseUrl + '/api/ping', { method: 'GET' });
+                    if (!response.ok) {
+                        throw new Error('HTTP ' + response.status);
+                    }
+                    wirelessHealthFailCount = 0;
+                } catch (error) {
+                    wirelessHealthFailCount += 1;
+                    if (wirelessHealthFailCount >= WIFI_HEALTHCHECK_FAIL_THRESHOLD) {
+                        handleWirelessConnectionLost(error);
+                    }
+                } finally {
+                    wirelessHealthBusy = false;
+                }
+            }, WIFI_HEALTHCHECK_MS);
         }
 
         function isSerialConnected() {
@@ -1387,16 +1446,42 @@
             }
         }
 
+        function forceStopRcModeLocal() {
+            rcMode = false;
+            rcPointerActive = false;
+            rcKeyUp = false;
+            rcKeyDown = false;
+            rcKeyLeft = false;
+            rcKeyRight = false;
+            rcHasSentMove = false;
+            rcLastSentX = 0;
+            rcLastSentY = 0;
+            rcSendInFlight = false;
+            rcPendingMove = null;
+            stopRcSending();
+            resetRcVector();
+            const runRcBtn = document.getElementById('runRcBtn');
+            if (runRcBtn) {
+                runRcBtn.classList.remove('active');
+            }
+        }
+
         function disconnectWireless() {
-            setRcMode(false, true);
+            if (wirelessConnected && rcMode) {
+                sendSerialCommand('rc off', false).catch(() => {});
+            }
+            forceStopRcModeLocal();
             wirelessBaseUrl = '';
             updateWirelessStatus(false);
             addConsoleLog('WiFi disconnected.');
         }
 
         function handleWirelessConnectionLost(error) {
+            if (!wirelessConnected) {
+                return;
+            }
             const detail = error ? String(error) : 'unknown error';
-            setRcMode(false, true);
+            forceStopRcModeLocal();
             wirelessBaseUrl = '';
             updateWirelessStatus(false);
             addConsoleLog('WiFi connection lost: ' + detail);
@@ -1486,6 +1571,30 @@
             updateRcInfo();
         }
 
+        function quantizeRcVectorToEight(x, y) {
+            const magnitude = Math.hypot(x, y);
+            if (magnitude < RC_DEADZONE) {
+                return { x: 0, y: 0 };
+            }
+
+            const sectorAngle = Math.PI / 4;
+            const angle = Math.atan2(y, x);
+            const sector = Math.round(angle / sectorAngle);
+            const snapped = sector * sectorAngle;
+
+            return {
+                x: Math.round(Math.cos(snapped) * RC_EIGHT_DIR_MAGNITUDE),
+                y: Math.round(Math.sin(snapped) * RC_EIGHT_DIR_MAGNITUDE)
+            };
+        }
+
+        function setRcVector(x, y) {
+            const quantized = quantizeRcVectorToEight(x, y);
+            rcCurrentX = quantized.x;
+            rcCurrentY = quantized.y;
+            updateRcStickVisual();
+        }
+
         function setRcVectorFromClientPoint(clientX, clientY) {
             const pad = document.getElementById('rcPad');
             if (!pad) return;
@@ -1502,9 +1611,9 @@
                 dy *= scale;
             }
 
-            rcCurrentX = Math.round((dx / RC_STICK_RADIUS) * 100);
-            rcCurrentY = Math.round((-dy / RC_STICK_RADIUS) * 100);
-            updateRcStickVisual();
+            const rawX = Math.round((dx / RC_STICK_RADIUS) * 100);
+            const rawY = Math.round((-dy / RC_STICK_RADIUS) * 100);
+            setRcVector(rawX, rawY);
         }
 
         function resetRcVector() {
@@ -1525,28 +1634,51 @@
             return { direction, strength };
         }
 
-        async function sendRcMove(showError = true) {
-            const isZeroInput = (rcCurrentX === 0 && rcCurrentY === 0);
-            if (!isZeroInput) {
-                rcZeroBurstRemain = 5;
-            } else if (rcZeroBurstRemain > 0) {
-                rcZeroBurstRemain -= 1;
-            } else {
+        async function flushRcPendingMove() {
+            if (rcSendInFlight) {
                 return;
             }
 
+            rcSendInFlight = true;
             try {
-                if (wirelessConnected) {
-                    await sendSerialCommand('rc move ' + rcCurrentX + ' ' + rcCurrentY, false);
-                } else {
-                    const compact = toCompactRc(rcCurrentX, rcCurrentY);
-                    await sendSerialCommand('m ' + compact.direction + ' ' + compact.strength, false);
+                while (rcPendingMove) {
+                    const move = rcPendingMove;
+                    rcPendingMove = null;
+
+                    if (!rcMode && (move.x !== 0 || move.y !== 0)) {
+                        continue;
+                    }
+
+                    if (wirelessConnected) {
+                        await sendSerialCommand('rc move ' + move.x + ' ' + move.y, false);
+                    } else {
+                        const compact = toCompactRc(move.x, move.y);
+                        await sendSerialCommand('m ' + compact.direction + ' ' + compact.strength, false);
+                    }
+
+                    rcLastSentX = move.x;
+                    rcLastSentY = move.y;
+                    rcHasSentMove = true;
                 }
             } catch (error) {
-                if (showError) {
+                if (rcPendingMove && rcPendingMove.showError) {
                     addConsoleLog('RC move failed: ' + error);
                 }
+            } finally {
+                rcSendInFlight = false;
             }
+        }
+
+        async function sendRcMove(showError = true) {
+            const scaledX = Math.round(rcCurrentX * RC_SPEED_SCALE);
+            const scaledY = Math.round(rcCurrentY * RC_SPEED_SCALE);
+            const changed = !rcHasSentMove || scaledX !== rcLastSentX || scaledY !== rcLastSentY;
+            if (!changed) {
+                return;
+            }
+
+            rcPendingMove = { x: scaledX, y: scaledY, showError };
+            await flushRcPendingMove();
         }
 
         function startRcSending() {
@@ -1593,8 +1725,7 @@
 
             if (rcMode) {
                 resetRcVector();
-                rcZeroBurstRemain = 5;
-                startRcSending();
+                rcHasSentMove = false;
                 if (wirelessConnected) {
                     await sendSerialCommand('run auto', false);
                 } else {
@@ -1607,8 +1738,13 @@
                 }
             } else {
                 stopRcSending();
+                rcPointerActive = false;
+                rcKeyUp = false;
+                rcKeyDown = false;
+                rcKeyLeft = false;
+                rcKeyRight = false;
                 resetRcVector();
-                rcZeroBurstRemain = 0;
+                rcHasSentMove = false;
                 try {
                     if (wirelessConnected) {
                         await sendSerialCommand('rc off', false);
@@ -1632,6 +1768,110 @@
             setRcMode(!rcMode);
         }
 
+        function isTextInputElement(element) {
+            if (!element || !element.tagName) return false;
+            const tag = element.tagName;
+            return tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT';
+        }
+
+        function normalizeRcKeyName(key) {
+            if (!key) return '';
+            if (key === 'ArrowUp' || key === 'ArrowDown' || key === 'ArrowLeft' || key === 'ArrowRight') {
+                return key;
+            }
+            const lower = String(key).toLowerCase();
+            if (lower === 'w') return 'ArrowUp';
+            if (lower === 's') return 'ArrowDown';
+            if (lower === 'a') return 'ArrowLeft';
+            if (lower === 'd') return 'ArrowRight';
+            return '';
+        }
+
+        function updateRcVectorFromArrowKeys() {
+            if (!rcMode || rcPointerActive) {
+                return;
+            }
+
+            const axisX = (rcKeyRight ? 1 : 0) - (rcKeyLeft ? 1 : 0);
+            const axisY = (rcKeyUp ? 1 : 0) - (rcKeyDown ? 1 : 0);
+
+            if (axisX === 0 && axisY === 0) {
+                resetRcVector();
+                sendRcMove(false);
+                return;
+            }
+
+            const norm = Math.hypot(axisX, axisY) || 1;
+            setRcVector(
+                Math.round((axisX / norm) * RC_KEYBOARD_MAGNITUDE),
+                Math.round((axisY / norm) * RC_KEYBOARD_MAGNITUDE)
+            );
+            sendRcMove(false);
+        }
+
+        function handleRcArrowKeyDown(event) {
+            if (!rcMode) {
+                return;
+            }
+            if (isTextInputElement(event.target)) {
+                return;
+            }
+
+            const keyName = normalizeRcKeyName(event.key);
+            if (!keyName) {
+                return;
+            }
+
+            let changed = false;
+            if (keyName === 'ArrowUp') {
+                if (!rcKeyUp) changed = true;
+                rcKeyUp = true;
+            } else if (keyName === 'ArrowDown') {
+                if (!rcKeyDown) changed = true;
+                rcKeyDown = true;
+            } else if (keyName === 'ArrowLeft') {
+                if (!rcKeyLeft) changed = true;
+                rcKeyLeft = true;
+            } else if (keyName === 'ArrowRight') {
+                if (!rcKeyRight) changed = true;
+                rcKeyRight = true;
+            }
+
+            event.preventDefault();
+            if (changed) {
+                updateRcVectorFromArrowKeys();
+            }
+        }
+
+        function handleRcArrowKeyUp(event) {
+            const keyName = normalizeRcKeyName(event.key);
+            if (!keyName) {
+                return;
+            }
+
+            let changed = false;
+            if (keyName === 'ArrowUp') {
+                if (rcKeyUp) changed = true;
+                rcKeyUp = false;
+            } else if (keyName === 'ArrowDown') {
+                if (rcKeyDown) changed = true;
+                rcKeyDown = false;
+            } else if (keyName === 'ArrowLeft') {
+                if (rcKeyLeft) changed = true;
+                rcKeyLeft = false;
+            } else if (keyName === 'ArrowRight') {
+                if (rcKeyRight) changed = true;
+                rcKeyRight = false;
+            }
+
+            if (rcMode) {
+                event.preventDefault();
+            }
+            if (changed) {
+                updateRcVectorFromArrowKeys();
+            }
+        }
+
         function onRcPadPointerDown(event) {
             if (!rcMode) return;
             rcPointerActive = true;
@@ -1650,6 +1890,7 @@
         function onRcPadPointerMove(event) {
             if (!rcMode || !rcPointerActive) return;
             setRcVectorFromClientPoint(event.clientX, event.clientY);
+            sendRcMove(false);
         }
 
         function onRcPadPointerUp(event) {
@@ -1855,6 +2096,9 @@
         }
 
         function handleSliderArrowKey(event) {
+            if (rcMode) {
+                return;
+            }
             if (event.key !== 'ArrowLeft' && event.key !== 'ArrowRight') {
                 return;
             }
@@ -2455,6 +2699,8 @@
                 rcPad.addEventListener('pointerleave', onRcPadPointerUp);
             }
             document.addEventListener('keydown', handleSliderArrowKey);
+            document.addEventListener('keydown', handleRcArrowKeyDown);
+            document.addEventListener('keyup', handleRcArrowKeyUp);
         });
 
         window.addEventListener('resize', () => {
