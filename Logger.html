@@ -232,6 +232,31 @@
             display: none;
         }
 
+        .rc-speed {
+            min-width: 210px;
+            display: flex;
+            flex-direction: column;
+            gap: 7px;
+        }
+
+        .rc-speed-label {
+            font-size: 12px;
+            color: #ffd7b0;
+            font-weight: 700;
+            letter-spacing: 0.2px;
+        }
+
+        .rc-speed-slider {
+            width: 100%;
+            accent-color: #ff9b3d;
+        }
+
+        .rc-speed-value {
+            font-size: 11px;
+            color: #ffb066;
+            text-align: right;
+        }
+
         .rc-pad {
             width: 150px;
             height: 150px;
@@ -819,6 +844,11 @@
             <div id="rcPad" class="rc-pad" aria-label="RC joystick" role="application">
                 <div id="rcStick" class="rc-stick"></div>
             </div>
+            <div class="rc-speed">
+                <label class="rc-speed-label" for="rcSpeedSlider">RC Speed</label>
+                <input type="range" id="rcSpeedSlider" class="rc-speed-slider" min="80" max="200" step="5" value="100">
+                <div class="rc-speed-value"><span id="rcSpeedValue">100</span>%</div>
+            </div>
         </div>
 
         <div class="controls">
@@ -929,7 +959,6 @@
         const RC_STICK_RADIUS = 53;
         const RC_SEND_INTERVAL_MS = 500;
         const RC_KEEPALIVE_MS = 220;
-        const RC_SPEED_SCALE = 0.5;
         const RC_KEYBOARD_MAGNITUDE = 68;
         const RC_EIGHT_DIR_MAGNITUDE = 72;
         const RC_DEADZONE = 16;
@@ -947,6 +976,7 @@
         let rcSendInFlight = false;
         let rcPendingMove = null;
         let rcLastSentAtMs = 0;
+        let rcSpeedPercent = 50;
         let rcKeyUp = false;
         let rcKeyDown = false;
         let rcKeyLeft = false;
@@ -1664,6 +1694,76 @@
             // Numeric RC readout was removed from the UI; keep this as a no-op hook.
         }
 
+        function normalizeRcSpeedPercent(value) {
+            const numeric = Number(value);
+            if (!Number.isFinite(numeric)) {
+                return 100;
+            }
+            const clamped = Math.max(80, Math.min(200, Math.round(numeric)));
+            return Math.round(clamped / 5) * 5;
+        }
+
+        function updateRcSpeedUi() {
+            const slider = document.getElementById('rcSpeedSlider');
+            const value = document.getElementById('rcSpeedValue');
+            if (slider) {
+                slider.value = String(rcSpeedPercent);
+            }
+            if (value) {
+                value.textContent = String(rcSpeedPercent);
+            }
+        }
+
+        function onRcSpeedSliderInput(event) {
+            rcSpeedPercent = normalizeRcSpeedPercent(event.target.value);
+            updateRcSpeedUi();
+        }
+
+        function onRcSpeedSliderKeyDown(event) {
+            if (event.key === 'ArrowRight') {
+                event.preventDefault();
+                event.stopPropagation();
+            }
+        }
+
+        async function triggerRcAction(command) {
+            if (!rcMode || !canSendCommands()) {
+                return;
+            }
+            try {
+                await sendSerialCommand(command, false);
+            } catch (error) {
+                addConsoleLog('RC action failed: ' + error);
+            }
+        }
+
+        function handleRcActionKeyDown(event) {
+            if (!rcMode || isTextInputElement(event.target) || event.repeat) {
+                return;
+            }
+
+            const key = String(event.key || '').toLowerCase();
+            if (key === 'q') {
+                event.preventDefault();
+                triggerRcAction('rc turn left');
+            } else if (key === 'e') {
+                event.preventDefault();
+                triggerRcAction('rc turn right');
+            } else if (key === 'b') {
+                event.preventDefault();
+                triggerRcAction('rc goal blue');
+            } else if (key === 'y') {
+                event.preventDefault();
+                triggerRcAction('rc goal yellow');
+            } else if (key === 'g') {
+                event.preventDefault();
+                triggerRcAction('gyro zero');
+            } else if (event.code === 'Space' || event.key === ' ') {
+                event.preventDefault();
+                triggerRcAction('rc kick');
+            }
+        }
+
         function updateRcStickVisual() {
             const stick = document.getElementById('rcStick');
             if (!stick) return;
@@ -1752,7 +1852,7 @@
                     }
 
                     if (wirelessConnected) {
-                        await sendSerialCommand('rc move ' + move.x + ' ' + move.y, false);
+                        await sendSerialCommand('rc move ' + move.x + ' ' + move.y + ' ' + rcSpeedPercent, false);
                     } else {
                         const compact = toCompactRc(move.x, move.y);
                         await sendSerialCommand('m ' + compact.direction + ' ' + compact.strength, false);
@@ -1773,8 +1873,9 @@
         }
 
         async function sendRcMove(showError = true) {
-            const scaledX = Math.round(rcCurrentX * RC_SPEED_SCALE);
-            const scaledY = Math.round(rcCurrentY * RC_SPEED_SCALE);
+            const scale = rcSpeedPercent / 100;
+            const scaledX = Math.round(rcCurrentX * scale);
+            const scaledY = Math.round(rcCurrentY * scale);
             const changed = !rcHasSentMove || scaledX !== rcLastSentX || scaledY !== rcLastSentY;
             if (!changed) {
                 const nonZero = (scaledX !== 0 || scaledY !== 0);
@@ -2693,6 +2794,7 @@
                 const supportsWireless = command.toLowerCase().startsWith('run ')
                     || command.toLowerCase().startsWith('rc ')
                     || command.toLowerCase().startsWith('m ')
+                    || command.toLowerCase().startsWith('gyro zero')
                     || command.toLowerCase() === 'get model'
                     || command.toLowerCase().startsWith('set model ')
                     || command.toLowerCase() === 'clear';
@@ -2841,10 +2943,16 @@
             updateSlider();
             updateRealtimeButton();
             updateRcStickVisual();
+            updateRcSpeedUi();
             updateWirelessStatus(false);
             updateControlAvailability();
             const slider = document.getElementById('data-slider');
             slider.addEventListener('input', onSliderChange);
+            const rcSpeedSlider = document.getElementById('rcSpeedSlider');
+            if (rcSpeedSlider) {
+                rcSpeedSlider.addEventListener('input', onRcSpeedSliderInput);
+                rcSpeedSlider.addEventListener('keydown', onRcSpeedSliderKeyDown);
+            }
             const rcPad = document.getElementById('rcPad');
             if (rcPad) {
                 rcPad.addEventListener('pointerdown', onRcPadPointerDown);
@@ -2855,6 +2963,7 @@
             }
             document.addEventListener('keydown', handleSliderArrowKey);
             document.addEventListener('keydown', handleRcArrowKeyDown);
+            document.addEventListener('keydown', handleRcActionKeyDown);
             document.addEventListener('keyup', handleRcArrowKeyUp);
         });
 
