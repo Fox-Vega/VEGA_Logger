@@ -119,27 +119,11 @@
             color: #6b7a8d;
         }
 
-/* .btn-get-logs:hover {
-            color: #0c1a2f;
-        }
-
-.btn-connect:hover {
-            color: #0f1a30;
-        } */
-
 .btn-connect.connected {
             --btn-border: #ffb74d;
             --btn-text: #ffffff;
             --btn-bg: #2a2214;
             --btn-glow: rgba(255, 184, 77, 0.4);
-        }
-
-.btn-clear:hover {
-            color: #2a140d;
-        }
-
-.btn-run:hover {
-            color: #0d1520;
         }
 
 .btn-run:disabled:hover,
@@ -298,7 +282,7 @@
             color: #0f211f;
         }
 
-        .btn-realtime-switch {
+        /* .btn-realtime-switch {
             --btn-border: transparent;
             --btn-text: #d6dbe2;
             --btn-bg: transparent;
@@ -314,6 +298,18 @@
             margin-left: auto;
             background: transparent;
             box-shadow: none;
+        } */
+        .btn-realtime-switch {
+            --btn-border: transparent; /* 念のため透明に */
+            --btn-text: #d6dbe2;
+            --btn-bg: transparent;
+            --btn-glow: transparent;
+            min-width: 150px;
+            border-radius: 999px;
+            border: none; /* ← ここが 'none' になっているか確認 */
+            background: transparent; /* ← ここを 'transparent' に変更 */
+            box-shadow: none; /* 影も消す */
+            /* ... 他のプロパティ */
         }
 
         .btn-realtime-switch:hover {
