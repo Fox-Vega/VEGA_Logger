@@ -6,11 +6,11 @@
     <title>VEGA Dashboard</title>
     <style>
         /* ============================================================
-           サイズ設定 - ここを変更してください
+            サイズ設定
            ============================================================ */
         :root {
-            --logo-height: 40px;       /* VEGAロゴの高さ */
-            --dashboard-font-size: 40px; /* Dashboardの文字サイズ */
+            --logo-height: 35px;
+            --dashboard-font-size: 40px;
         }
         /* ============================================================ */
 
@@ -119,13 +119,13 @@
             color: #6b7a8d;
         }
 
-.btn-get-logs:hover {
+/* .btn-get-logs:hover {
             color: #0c1a2f;
         }
 
 .btn-connect:hover {
             color: #0f1a30;
-        }
+        } */
 
 .btn-connect.connected {
             --btn-border: #ffb74d;
@@ -243,9 +243,7 @@
             border-radius: 50%;
             border: 2px solid #6b7a8d;
             position: relative;
-            background:
-                radial-gradient(circle at center, rgba(90, 138, 223, 0.15) 0%, rgba(58, 106, 191, 0.08) 38%, rgba(240, 243, 248, 0.97) 70%),
-                #f0f3f8;
+            background: transparent;
             touch-action: none;
             user-select: none;
             cursor: pointer;
@@ -300,30 +298,27 @@
             color: #0f211f;
         }
 
-.btn-realtime-switch {
+        .btn-realtime-switch {
             --btn-border: transparent;
             --btn-text: #d6dbe2;
             --btn-bg: transparent;
             --btn-glow: transparent;
             min-width: 150px;
-            border-radius: 6px;
+            border-radius: 999px;
             border: none;
-            outline: none;
             padding: 7px 12px;
-            height: 36px;
             display: inline-flex;
             align-items: center;
             gap: 10px;
             justify-content: space-between;
             margin-left: auto;
-            background: #4a5568;
+            background: transparent;
             box-shadow: none;
-            color: #ffffff;
         }
 
         .btn-realtime-switch:hover {
-            background: #3a4458;
-            color: #ffffff;
+            background: transparent;
+            color: #e4e8ef;
             box-shadow: none;
             transform: none;
         }
@@ -333,7 +328,6 @@
         }
 
         .btn-realtime-switch .switch-label {
-            font-size: 12px;
             font-weight: 700;
             letter-spacing: 0.2px;
             line-height: 1;
@@ -344,10 +338,10 @@
             height: 24px;
             border-radius: 999px;
             position: relative;
-            border: none;
-            background: #b0bac8;
+            border: 1px solid #2e3238;
+            background: #050607;
             overflow: hidden;
-            box-shadow: none;
+            box-shadow: inset 0 0 6px rgba(0, 0, 0, 0.45);
             transition: transform 0.16s ease;
             transform-origin: center;
         }
@@ -360,7 +354,7 @@
             content: '';
             position: absolute;
             inset: 0;
-            background: linear-gradient(90deg, #3a6abf, #5a8adf);
+            background: linear-gradient(90deg, #ff9a2f, #ffc35a);
             opacity: 0;
             transition: opacity 0.22s ease;
         }
@@ -380,10 +374,10 @@
         }
 
         .btn-realtime-switch.active {
-            background: #3a6abf;
+            background: transparent;
             border-color: transparent;
             box-shadow: none;
-            color: #ffffff;
+            color: #ffe1b0;
         }
 
         .btn-realtime-switch.active .switch-track::before {
