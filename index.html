@@ -810,7 +810,7 @@
         }
 
         .wifi-host-input {
-            width: 150px;
+            width: 90px;
             padding: 7px 9px;
             border: 1px solid #c0ccd8;
             border-radius: 4px;
@@ -951,6 +951,7 @@
         <div class="controls">
             <button class="btn-connect disconnected" id="connectBtn" onclick="handleSerialConnect()">Disconnected</button>
             <button class="btn-get-logs" id="getLogsBtn" onclick="requestLogs()">Get Logs ⤓</button>
+            <img src="Download.png" style="height:28px;cursor:pointer;filter:brightness(0) invert(1);" onclick="requestLogs()" title="Download Logs">
             <button class="btn-clear" id="clearBtn" onclick="clearLogs()">Clear</button>
             <button class="btn-status" id="statusBtn" onclick="requestStatus()">Status</button>
             <button class="btn-status btn-realtime-switch" id="realtimeBtn" onclick="toggleRealtimeMode()" aria-pressed="false">
