@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Log Viewer</title>
+    <title>VEGA Dashboard</title>
     <style>
         * {
             margin: 0;
@@ -13,17 +13,18 @@
 
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background-color: #1a1a1a;
+            background-color: #f5f6f8;
             padding: 10px;
             overflow-x: hidden;
+            color: #1a1a2e;
         }
 
         .container {
             max-width: 1200px;
             margin: 0 auto;
-            background-color: #141414;
-            border: 1px solid #333;
-            border-radius: 4px;
+            background-color: transparent;
+            border: none;
+            border-radius: 0;
             padding: 20px;
         }
 
@@ -33,7 +34,7 @@
             align-items: center;
             margin-bottom: 20px;
             padding-bottom: 15px;
-            border-bottom: 1px solid #333;
+            border-bottom: 2px solid #e2e6ea;
         }
 
         div {
@@ -49,7 +50,7 @@
         .status-info {
             opacity: 0.25;
             font-size: 12px;
-            color: #00EBCC;
+            color: #00bba8;
         }
 
         .status-info.connected {
@@ -74,8 +75,8 @@
 
         button {
             --btn-border: #3c6481;
-            --btn-text: #cfe7ff;
-            --btn-bg: #111820;
+            --btn-text: #1a3a5c;
+            --btn-bg: #e8f0fa;
             --btn-glow: rgba(90, 154, 255, 0.3);
             padding: 8px 15px;
             border: 2px solid var(--btn-border);
@@ -474,8 +475,8 @@
         }
 
         .line-sensor-section {
-            background-color: #1f1f1f;
-            border: 1px solid #333;
+            background-color: #ffffff;
+            border: 1px solid #e2e6ea;
             border-radius: 3px;
             padding: 15px;
             margin-bottom: 20px;
@@ -483,7 +484,7 @@
 
         .line-sensor-title {
             font-size: 13px;
-            color: #ffc800;
+            color: #cc8800;
             margin-bottom: 10px;
         }
 
@@ -531,7 +532,7 @@
         .line-sensor-legend {
             margin-top: 10px;
             font-size: 11px;
-            color: #999;
+            color: #888;
         }
 
         .line-meta-panel {
@@ -539,7 +540,7 @@
             margin-bottom: 10px;
             font-size: 14px;
             font-weight: 700;
-            color: #fff;
+            color: #222;
             text-align: right;
             line-height: 1.5;
             min-height: 88px;
@@ -576,10 +577,10 @@
 
         .line-slider::-webkit-slider-runnable-track {
             height: 6px;
-            background: #2b2b2b;
-            border: 1px solid #444;
+            background: #d8e2ee;
+            border: 1px solid #bbc8da;
             border-radius: 999px;
-            box-shadow: inset 0 0 4px rgba(0, 0, 0, 0.5);
+            box-shadow: none;
         }
 
         .line-slider::-webkit-slider-thumb {
@@ -596,10 +597,10 @@
 
         .line-slider::-moz-range-track {
             height: 6px;
-            background: #2b2b2b;
-            border: 1px solid #444;
+            background: #d8e2ee;
+            border: 1px solid #bbc8da;
             border-radius: 999px;
-            box-shadow: inset 0 0 4px rgba(0, 0, 0, 0.5);
+            box-shadow: none;
         }
 
         .line-slider::-moz-range-thumb {
@@ -651,8 +652,8 @@
         }
 
         .graph-container {
-            background-color: #232323;
-            border: 1px solid #333;
+            background-color: #ffffff;
+            border: 1px solid #e2e6ea;
             border-radius: 3px;
             margin-bottom: 20px;
             padding: 15px;
@@ -667,8 +668,8 @@
         }
 
         .table-container {
-            background-color: #232323;
-            border: 1px solid #333;
+            background-color: #ffffff;
+            border: 1px solid #e2e6ea;
             border-radius: 3px;
             padding: 0;
             overflow: hidden;
@@ -681,7 +682,7 @@
         }
 
         table thead {
-            background-color: #466a9f;
+            background-color: #3a6abf;
             color: #fff;
             text-align: left;
         }
@@ -695,31 +696,31 @@
         table td {
             padding: 8px 10px;
             border: 1px solid #333;
-            color: #ccc;
+            color: #444;
         }
 
         table tbody tr:nth-child(odd) {
-            background-color: #2d2d2d;
+            background-color: #f8f9fb;
         }
 
         table tbody tr:nth-child(even) {
-            background-color: #323232;
+            background-color: #ffffff;
         }
 
         table tbody tr:hover {
-            background-color: #394a5a;
+            background-color: #e8f0fa;
         }
 
         .no-data {
-            color: #666;
+            color: #888;
             text-align: center;
             padding: 20px;
             font-size: 13px;
         }
 
         .console-info {
-            background-color: #1a1a1a;
-            border: 1px solid #333;
+            background-color: #1e2230;
+            border: 1px solid #2e3450;
             border-radius: 3px;
             padding: 15px;
             margin-top: 20px;
@@ -727,7 +728,7 @@
             overflow-y: auto;
             font-family: 'Courier New', monospace;
             font-size: 11px;
-            color: #ffffff;
+            color: #c8d8f0;
             scrollbar-width: thin;
             scrollbar-color: #ffb74d #2b2b2b;
         }
@@ -759,13 +760,13 @@
         .axis-label {
             position: absolute;
             font-size: 10px;
-            color: #999;
+            color: #888;
         }
 
         .header-info {
             margin-bottom: 15px;
             font-size: 12px;
-            color: #fff;
+            color: #333;
         }
 
         .header-actions {
@@ -779,10 +780,10 @@
         .wifi-host-input {
             width: 150px;
             padding: 7px 9px;
-            border: 1px solid #455362;
+            border: 1px solid #c0ccd8;
             border-radius: 4px;
-            background: #121820;
-            color: #d8e4f1;
+            background: #ffffff;
+            color: #333;
             font-size: 12px;
         }
 
@@ -855,7 +856,10 @@
 <body>
     <div class="container">
         <div class="header">
-            <div class="title">Log Viewer</div>
+            <div class="title" style="display:flex;align-items:flex-end;gap:0.6em;">
+                <img src="VEGA.png" alt="VEGA" style="height:18px;">
+                <span style="font-size:18px;font-weight:700;color:#1a1a2e;letter-spacing:0.5px;line-height:1;">Dashboard</span>
+            </div>
             <div class="header-actions">
                 <input id="wifiHostInput" class="wifi-host-input" type="text" value="192.168.4.1" placeholder="UI IP or host">
                 <button class="btn-wifi" id="wifiConnectBtn" onclick="toggleWirelessLink()">WiFi OFF</button>
