@@ -1,7 +1,7 @@
 # Dashboard
 
 
-__* Dashboardについて *__  
+__*Dashboardについて*__  
 VEGAが制作したロボットの開発ツール
 
 __*機能*__  
