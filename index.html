@@ -19,18 +19,19 @@
         :root {
             --logo-height: 35px;
             --dashboard-font-size: 40px;
-            --rc-pad-border: #ff9f43;
+            --rc-pad-border: #7a7a7a;
+            --rc-pad-border-width: 4px;
             /* --rc-guide-line: rgba(255, 175, 82, 0.45); */
-            /* --rc-pad-glow: rgba(255, 159, 67, 0.24); */
-            --rc-stick-grad-start: #ffd166;
-            --rc-stick-grad-end: #ff7a00;
-            --rc-stick-border: #b65300;
-            --rc-stick-glow: rgba(255, 122, 0, 0.42);
+            --rc-pad-glow: rgba(70, 70, 70, 0.24);
+            --rc-stick-grad-start: #000000;
+            --rc-stick-grad-end: #535353;
+            --rc-stick-border: #636363;
+            --rc-stick-glow: rgba(0, 0, 0, 0.52);
         }
         
         html,
         body {
-            background-color: #000000;
+            /* background-color: #000000; */
             height: 100%;
         }
         
@@ -42,7 +43,7 @@
         
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background-color: #f5f6f8;
+            background-color: #ffffff;
             /* padding: 10px 10px 0; */
             overflow-x: hidden;
             color: #1a1a2e;
@@ -288,7 +289,7 @@
             width: 150px;
             height: 150px;
             border-radius: 50%;
-            border: 2px solid var(--rc-pad-border);
+            border: var(--rc-pad-border-width) solid var(--rc-pad-border);
             position: relative;
             background: transparent;
             touch-action: none;
@@ -925,15 +926,15 @@
         }
 
         .rc-panel {
-            background: linear-gradient(160deg, #434852, #3a3f48);
-            border: 1px solid #5e646f;
+            /* background: linear-gradient(160deg, #434852, #3a3f48); */
+            /* border: 1px solid #5e646f; */
             border-radius: 18px;
             padding: 14px;
             margin-bottom: 20px;
             padding-left: 3%;
             display: flex;
             gap: 18px;
-            box-shadow: 0 12px 26px rgba(0, 0, 0, 0.22), inset 0 1px 0 rgba(255, 255, 255, 0.05);
+            /* box-shadow: 0 12px 26px rgba(0, 0, 0, 0.22), inset 0 1px 0 rgba(255, 255, 255, 0.05); */
         }
 
         .rc-pad{
@@ -941,19 +942,19 @@
         }
 
         .rc-speed-label {
-            color: #ffffff;
+            color: #000000;
         }
 
         .rc-speed-value,
         #rcSpeedValue {
-            color: #ffffff;
+            color: #000000;
+            margin-top : -10px;
+            font-size: 20px;
+            /* font-size: medium; */
         }
 
         body {
-            background:
-                radial-gradient(circle at 18% -8%, #b9e6ff 0%, rgba(185, 230, 255, 0) 38%),
-                radial-gradient(circle at 92% 2%, #c9dcff 0%, rgba(201, 220, 255, 0) 34%),
-                linear-gradient(180deg, #eef8ff 0%, #e7f3ff 52%, #f2f9ff 100%);
+            background: #eaf4ff;
         }
 
         .controls,
@@ -1055,9 +1056,14 @@
             text-shadow: 0 1px 1px rgba(0, 0, 0, 0.35);
         }
 
-        #realtimeBtn.active .switch-label {
+        /* #realtimeBtn.active .switch-label {
             color: #ffffff !important;
             text-shadow: 0 1px 2px rgba(0, 0, 0, 0.45);
+        } */
+
+        .switch-label {
+            color: #000000 !important;
+            /* text-shadow: 0 1px 1px rgba(0, 0, 0, 0.25); */
         }
     </style>
 </head>
