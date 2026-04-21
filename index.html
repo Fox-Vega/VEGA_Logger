@@ -21,6 +21,7 @@
             --dashboard-font-size: 40px;
             --rc-pad-border: #7a7a7a;
             --rc-pad-border-width: 4px;
+            --rc-stick-size: 60px;
             /* --rc-pad-glow: rgba(0, 0, 0, 0.14); */
             --rc-stick-grad-start: #252525;
             --rc-stick-grad-end: #252525;
@@ -322,8 +323,8 @@
         }
 
         .rc-stick {
-            width: 44px;
-            height: 44px;
+            width: var(--rc-stick-size);
+            height: var(--rc-stick-size);
             border-radius: 50%;
             background: linear-gradient(160deg, var(--rc-stick-grad-start), var(--rc-stick-grad-end));
             border: 2px solid var(--rc-stick-border);
@@ -1171,7 +1172,7 @@
     <footer class="site-footer">© 2026 VEGA - All Rights Reserved</footer>
 
     <script>
-        const development = true;
+        const development = false;
         const mockData = {};
 
         let port = null;
