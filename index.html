@@ -51,21 +51,6 @@
             flex-direction: column;
         }
 
-        .site-footer {
-            width: 100%;
-            margin-top: auto;
-            background-color: #1f293a;
-            border-radius: 15px 15px 0 0;
-            color: #ffffff;
-            text-align: center;
-            padding: 10px 14px;
-            font-size: 12px;
-            line-height: 1.4;
-            position: fixed;
-            z-index: 1000;
-            bottom: 0;
-        }
-
         .container {
             width: 95%;
             align-self: center;
@@ -180,7 +165,7 @@
         }
 
         button:disabled:hover {
-            background-color: #b0bac8;
+            background-color: #bcbcbc;
             color: #5f4b4b;
         }
 
@@ -875,30 +860,28 @@
             }
         }
 
-
-        /* Connected ボタン → オレンジ */
         .btn-connect.connected {
-            background-color: #3a6abf;
+            background-color: #353535;
             color: #ffffff;
         }
         .btn-connect.connected:hover {
-            background-color: #2a5298;
+            background-color: #353535;
         }
 
         /* Get Logs 取得中 → オレンジ */
         .btn-get-logs.loading {
-            background-color: #3a6abf;
+            background-color: #ff9030;
             color: #ffffff;
         }
         .btn-get-logs.loading:hover {
-            background-color: #2a5298;
+            background-color: #ff9030;
         }
 
         /* Run/Stop ボタン */
-        .btn-run-start { background-color: #e8f5ee; color: #2a7a4a; }
-        .btn-run-start:hover { background-color: #c8ecd8; }
-        .btn-run-stop { background-color: #fdecea; color: #c0392b; }
-        .btn-run-stop:hover { background-color: #f9d0cc; }
+        .btn-run-start { background-color: #ffffff; color: #56ff80; }
+        .btn-run-start:hover { background-color: #ffffff; }
+        .btn-run-stop { background-color: #ffffff; color: #ff5b48; }
+        .btn-run-stop:hover { background-color: #ffffff; }
 
         /* センサーボタン active */
         .btn-sensor.active {
@@ -908,22 +891,16 @@
 
         /* Monitor スイッチ active */
         .btn-realtime-switch.active {
-            color: #ff9500;
+            color: #ff9030;
         }
 
         /* WiFi ボタン active（接続中） */
         .btn-wifi.active {
-            background-color: #ff9500;
+            background-color: #ff9030;
             color: #ffffff;
         }
         .btn-wifi.active:hover {
-            background-color: #e08500;
-        }
-        .section-divider {
-            width: 100%;
-            height: 2px;
-            background: linear-gradient(90deg, #49b7ff, #8de9ff);
-            margin: 6px 0 14px;
+            background-color: #ff9030;
         }
 
         .rc-panel {
@@ -988,7 +965,7 @@
         }
 
         button {
-            background-color: #49b7ff;
+            background-color: #ff00bb;
             color: #ffffff;
         }
 
@@ -1000,7 +977,7 @@
         .btn-status,
         .btn-wifi,
         .btn-get-logs {
-            background-color: #6ecbff;
+            background-color: #353535;
             color: #ffffff;
         }
 
@@ -1008,12 +985,8 @@
         .btn-get-logs.loading,
         .btn-sensor.active,
         .btn-wifi.active {
-            background-color: #1da8ff;
+            background-color: #ff9030;
             color: #ffffff;
-        }
-
-        .btn-wifi.active:hover {
-            background-color: #079af6;
         }
 
         /* Action button emphasis */
@@ -1120,8 +1093,6 @@
             </button>
         </div>
 
-        <div class="section-divider" aria-hidden="true"></div>
-
         <div class="sensor-buttons" id="sensor-buttons">
             <button class="btn-sensor" disabled>Line</button>
         </div>
@@ -1138,7 +1109,7 @@
         </div>
 
         <div class="no-data" id="select-sensor-msg" style="display: none;">
-            Click sensor button to display
+            Select sensor to display
         </div>
 
         <div id="graph-section">
