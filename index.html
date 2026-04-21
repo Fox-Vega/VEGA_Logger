@@ -262,7 +262,7 @@
 
         .rc-speed-slider {
             width: 100%;
-            accent-color: #3a6abf;
+            accent-color: #000000;
         }
 
         .rc-speed-value {
@@ -334,7 +334,7 @@
 
         .btn-realtime-switch {
             --btn-border: transparent;
-            --btn-text: #d6dbe2;
+            --btn-text: #ffffff;
             --btn-bg: transparent;
             --btn-glow: transparent;
             /* min-width: 150px; */
@@ -411,7 +411,7 @@
             background: transparent;
             border-color: transparent;
             box-shadow: none;
-            color: #ffe1b0;
+            color: #ff00b3;
         }
 
         .btn-realtime-switch.active .switch-track::before {
@@ -441,7 +441,7 @@
 
         .line-sensor-section {
             background-color: #ffffff;
-            border: 1px solid #e2e6ea;
+            /* border: 1px solid #e2e6ea; */
             border-radius: 3px;
             padding: 15px;
             margin-bottom: 20px;
@@ -449,7 +449,7 @@
 
         .line-sensor-title {
             font-size: 13px;
-            color: #cc8800;
+            color: #ff9030;
             margin-bottom: 10px;
         }
 
@@ -482,8 +482,8 @@
         }
 
         .line-sensor-cell-active {
-            fill: #ff8b00;
-            stroke: #ffaa40;
+            fill: #ff9030;
+            stroke: #ff9030;
             stroke-width: 2;
         }
 
@@ -542,8 +542,8 @@
 
         .line-slider::-webkit-slider-runnable-track {
             height: 6px;
-            background: #d8e2ee;
-            border: 1px solid #bbc8da;
+            background: #ff00e6;
+            border: 1px solid #ff00cc;
             border-radius: 999px;
             box-shadow: none;
         }
@@ -555,15 +555,15 @@
             width: 16px;
             height: 16px;
             border-radius: 50%;
-            background: #3a6abf;
-            border: 2px solid #1a3060;
+            background: #bf3abf;
+            border: 2px solid #ff00f2;
             box-shadow: 0 0 0 2px rgba(58, 106, 191, 0.2);
         }
 
         .line-slider::-moz-range-track {
             height: 6px;
-            background: #d8e2ee;
-            border: 1px solid #bbc8da;
+            background: #ffffff;
+            border: 1px solid #ffffff;
             border-radius: 999px;
             box-shadow: none;
         }
@@ -572,7 +572,7 @@
             width: 16px;
             height: 16px;
             border-radius: 50%;
-            background: #3a6abf;
+            background: #353535;
             border: 2px solid #1a3060;
             box-shadow: 0 0 0 2px rgba(58, 106, 191, 0.2);
         }
@@ -589,8 +589,8 @@
 .btn-sensor.active {
             --btn-border: #ffffff;
             --btn-text: #0f2416;
-            --btn-bg: #1a3a1a;
-            --btn-glow: rgba(80, 180, 80, 0.35);
+            --btn-bg: #fb00ff;
+            --btn-glow: rgb(255, 0, 230);
             background-color: var(--btn-border);
             color: #0f2416;
             box-shadow: none;
@@ -598,7 +598,7 @@
 
 .graph-container {
             background-color: #ffffff;
-            border: 1px solid #e2e6ea;
+            border: 1px solid #ffffff;
             border-radius: 3px;
             margin-bottom: 20px;
             padding: 15px;
@@ -614,7 +614,7 @@
 
         .table-container {
             background-color: #ffffff;
-            border: 1px solid #e2e6ea;
+            border: 1px solid #ffffff;
             border-radius: 3px;
             padding: 0;
             overflow: hidden;
@@ -627,8 +627,8 @@
         }
 
         table thead {
-            background-color: #3a6abf;
-            color: #fff;
+            background-color: #bf3aa2;
+            color: #ffffff;
             text-align: left;
         }
 
@@ -645,15 +645,11 @@
         }
 
         table tbody tr:nth-child(odd) {
-            background-color: #f8f9fb;
+            background-color: #ffffff;
         }
 
         table tbody tr:nth-child(even) {
             background-color: #ffffff;
-        }
-
-        table tbody tr:hover {
-            background-color: #e8f0fa;
         }
 
         .no-data {
@@ -673,9 +669,9 @@
             overflow-y: auto;
             font-family: 'Courier New', monospace;
             font-size: 11px;
-            color: #c8d8f0;
+            color: #ffffff;
             scrollbar-width: thin;
-            scrollbar-color: #3a6abf #2b2b2b;
+            scrollbar-color: #ff00ff #2b2b2b;
 
             display: none;
         }
@@ -690,14 +686,10 @@
         }
 
         .console-info::-webkit-scrollbar-thumb {
-            background: #3a6abf;
-            border: 2px solid #1a3060;
+            background: #bf3aa2;
+            border: 2px solid #ac13bd;
             border-radius: 999px;
             box-shadow: 0 0 0 2px rgba(58, 106, 191, 0.2);
-        }
-
-        .console-info::-webkit-scrollbar-thumb:hover {
-            background: #5a8adf;
         }
 
         .console-info div {
@@ -727,7 +719,7 @@
         .wifi-combined {
             display: flex;
             align-items: center;
-            /* border: 1px solid #c0ccd8; */
+            border: 1px solid #ffffff;
             border-radius: 6px;
             overflow: hidden;
             background: #ffffff;
@@ -742,7 +734,7 @@
 
         .wifi-combined .btn-wifi {
             border-radius: 0 !important;
-            border-left: 1px solid #ffffff !important;
+            /* border-left: 1px solid #ffffff !important; */
             white-space: nowrap;
             padding: 7px 12px;
         }
@@ -750,7 +742,7 @@
         .wifi-host-input {
             width: 90px;
             padding: 7px 9px;
-            /* border: 1px solid #ffffff; */
+            border: 1px solid #ffffff;
             border-radius: 4px;
             background: #ffffff;
             color: #333;
@@ -759,14 +751,14 @@
 
         .wifi-host-input:focus {
             outline: none;
-            border-color: #ffffff;
+            border-color: #ff7fdd;
             box-shadow: 0 0 0 2px rgba(127, 168, 255, 0.18);
         }
 
 .btn-wifi.active {
-            --btn-border: #4fbf73;
+            --btn-border: #bf4fbb;
             --btn-bg: #14241a;
-            --btn-glow: rgba(79, 191, 115, 0.35);
+            --btn-glow: rgba(191, 79, 184, 0.35);
         }
 
         @media (max-width: 720px) {
@@ -792,7 +784,7 @@
             .wifi-combined {
             display: flex;
             align-items: center;
-            /* border: 1px solid #ffffff */
+            border: 1px solid #ffffff;
             border-radius: 6px;
             overflow: hidden;
             background: #ffffff;
@@ -807,9 +799,9 @@
 
         .wifi-combined .btn-wifi {
             border-radius: 0 !important;
-            /* border-left: 1px solid #e2e6ea !important; */
+            border-left: 1px solid #ffffff !important;
             white-space: nowrap;
-            padding: 6px 10px;
+            padding: 7px 12px;
         }
 
         .wifi-host-input {
@@ -824,7 +816,7 @@
                 flex: 0 0 auto;
                 min-width: 104px;
                 font-size: 12px;
-                padding: 8px 10px;
+                padding: 10px 12px;
             }
 
             .controls button {
@@ -938,14 +930,14 @@
         .graph-container,
         .table-container {
             background: #f7fcff;
-            border: 1px solid #ff00ae;
+            /* border: 1px solid #ff00ae; */
             border-radius: 12px;
             box-shadow: 0 8px 22px rgba(73, 183, 255, 0.14);
         }
 
         .console-info {
             background: #232833;
-            border-color: #4b535f;
+            /* border-color: #4b535f; */
         }
 
         .wifi-combined {
