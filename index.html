@@ -31,7 +31,6 @@
 
         html,
         body {
-            /* background-color: #000000; */
             height: 100%;
         }
 
@@ -44,7 +43,6 @@
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             background-color: #ffffff;
-            /* padding: 10px 10px 0; */
             overflow-x: hidden;
             color: #1a1a2e;
             display: flex;
@@ -76,7 +74,6 @@
         }
 
         .title {
-            /* margin-top: 20; */
             display: flex;
             align-items: center;
             gap: 0.6em;
@@ -98,33 +95,32 @@
             font-size: 56px;
             font-weight: 400;
             font-family: 'ORION DK', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            display: inline-block; /* transformを効かせるために必要 */
+            display: inline-block;
             color: #010101;
             letter-spacing: 0.5px;
             white-space: nowrap;
-            /* margin-bottom: -11px; */
         }
 
         .status-info {
             opacity: 0.25;
             font-size: 12px;
-            color: #00bba8;
+            color: #ff9030;
         }
 
         .status-info.connected {
-            color: #00EBCC;
+            color: #ff9030;
         }
 
         .controls {
             display: flex;
             gap: 10px;
-            margin-bottom: 20px;
+            margin-bottom: 8px; /* ← 20px から縮小 */
             flex-wrap: wrap;
             align-items: center;
         }
 
         .run-controls {
-            margin-bottom: 10px;
+            margin-bottom: 8px; /* ← 10px から縮小 */
         }
 
         .run-controls.hidden {
@@ -148,7 +144,6 @@
 
         button:hover {
             background-color: #3a4458;
-            /* transform: translateY(-1px); */
         }
 
         button:active {
@@ -166,17 +161,16 @@
 
         button:disabled:hover {
             background-color: #b0bac8;
-            /* color: #5f4b4b; */
         }
 
-.btn-connect.connected {
-            --btn-border: #ffb74d;
+        .btn-connect.connected {
+            --btn-border: #ff9030;
             --btn-text: #ffffff;
             --btn-bg: #2a2214;
-            --btn-glow: rgba(255, 184, 77, 0.4);
+            --btn-glow: rgba(255, 144, 48, 0.4);
         }
 
-.btn-run:disabled:hover,
+        .btn-run:disabled:hover,
         .btn-run.disabled:hover {
             background-color: var(--btn-bg);
             color: var(--btn-text);
@@ -184,16 +178,16 @@
             box-shadow: none;
         }
 
-.btn-run-stop {
+        .btn-run-stop {
             --btn-border: #ff6f61;
             --btn-text: #ffffff;
             --btn-bg: #2a1815;
             --btn-glow: rgba(255, 111, 97, 0.35);
         }
 
-.btn-run-rc.active {
-            background-color: #3a6abf;
-            border-color: #3a6abf;
+        .btn-run-rc.active {
+            background-color: #f08c00;
+            border-color: #f08c00;
             color: #ffffff;
             box-shadow: none;
         }
@@ -262,7 +256,7 @@
 
         .rc-speed-slider {
             width: 100%;
-            accent-color: #000000;
+            accent-color: #ff9030; /* ← #000000 から変更 */
         }
 
         .rc-speed-value {
@@ -333,7 +327,6 @@
             --btn-text: #ffffff;
             --btn-bg: transparent;
             --btn-glow: transparent;
-            /* min-width: 150px; */
             border-radius: 999px;
             border: none;
             padding: 7px 12px;
@@ -377,7 +370,7 @@
             content: '';
             position: absolute;
             inset: 0;
-            background: linear-gradient(90deg, #ff9a2f, #ffc35a);
+            background: linear-gradient(90deg, #ff7a00, #ffb347); /* ← orange instead of #ff9a2f/#ffc35a */
             opacity: 0;
             transition: opacity 0.22s ease;
         }
@@ -400,7 +393,7 @@
             background: transparent;
             border-color: transparent;
             box-shadow: none;
-            color: #ff00b3;
+            color: #ff9030; /* ← #ff00b3 から変更 */
         }
 
         .btn-realtime-switch.active .switch-track::before {
@@ -424,13 +417,12 @@
         .sensor-buttons {
             display: flex;
             gap: 10px;
-            margin-bottom: 20px;
+            margin-bottom: 12px; /* ← 20px から縮小 */
             flex-wrap: wrap;
         }
 
         .line-sensor-section {
             background-color: #ffffff;
-            /* border: 1px solid #e2e6ea; */
             border-radius: 3px;
             padding: 15px;
             margin-bottom: 20px;
@@ -442,7 +434,7 @@
             margin-bottom: 10px;
         }
 
-.line-sensor-circle-container {
+        .line-sensor-circle-container {
             display: flex;
             justify-content: center;
             align-items: center;
@@ -531,8 +523,8 @@
 
         .line-slider::-webkit-slider-runnable-track {
             height: 6px;
-            background: #ff00e6;
-            border: 1px solid #ff00cc;
+            background: #ff9030; /* ← #ff00e6 から変更 */
+            border: 1px solid #e07820; /* ← #ff00cc から変更 */
             border-radius: 999px;
             box-shadow: none;
         }
@@ -544,15 +536,15 @@
             width: 16px;
             height: 16px;
             border-radius: 50%;
-            background: #bf3abf;
-            border: 2px solid #ff00f2;
-            box-shadow: 0 0 0 2px rgba(58, 106, 191, 0.2);
+            background: #cc6600; /* ← #bf3abf から変更 */
+            border: 2px solid #ff9030; /* ← #ff00f2 から変更 */
+            box-shadow: 0 0 0 2px rgba(255, 144, 48, 0.2); /* ← 青系から変更 */
         }
 
         .line-slider::-moz-range-track {
             height: 6px;
-            background: #ffffff;
-            border: 1px solid #ffffff;
+            background: #ff9030; /* ← #ffffff から変更 */
+            border: 1px solid #e07820; /* ← #ffffff から変更 */
             border-radius: 999px;
             box-shadow: none;
         }
@@ -562,11 +554,11 @@
             height: 16px;
             border-radius: 50%;
             background: #353535;
-            border: 2px solid #1a3060;
-            box-shadow: 0 0 0 2px rgba(58, 106, 191, 0.2);
+            border: 2px solid #ff9030; /* ← #1a3060 から変更 */
+            box-shadow: 0 0 0 2px rgba(255, 144, 48, 0.2); /* ← 青系から変更 */
         }
 
-.sensor-buttons .btn-sensor:disabled,
+        .sensor-buttons .btn-sensor:disabled,
         .sensor-buttons .btn-sensor.disabled {
             opacity: 0.45;
             cursor: not-allowed;
@@ -575,7 +567,7 @@
             box-shadow: none !important;
         }
 
-.btn-sensor.active {
+        .btn-sensor.active {
             --btn-border: #ffffff;
             --btn-text: #0f2416;
             --btn-bg: #fb00ff;
@@ -585,7 +577,7 @@
             box-shadow: none;
         }
 
-.graph-container {
+        .graph-container {
             background-color: #ffffff;
             border: 1px solid #ffffff;
             border-radius: 3px;
@@ -616,7 +608,7 @@
         }
 
         table thead {
-            background-color: #bf3aa2;
+            background-color: #353535; /* ← #bf3aa2 から変更（紫系排除） */
             color: #ffffff;
             text-align: left;
         }
@@ -650,7 +642,7 @@
 
         .console-info {
             background-color: #1e2230;
-            border: 1px solid #2e3450;
+            border: 1px solid #1e2230;
             border-radius: 3px;
             padding: 15px;
             margin-top: 20px;
@@ -660,8 +652,7 @@
             font-size: 11px;
             color: #ffffff;
             scrollbar-width: thin;
-            scrollbar-color: #ff00ff #2b2b2b;
-
+            scrollbar-color: #ffffff #1e2230;
             display: none;
         }
 
@@ -675,10 +666,10 @@
         }
 
         .console-info::-webkit-scrollbar-thumb {
-            background: #bf3aa2;
-            border: 2px solid #ac13bd;
+            background: #ff9030; /* ← #bf3aa2 から変更 */
+            border: 2px solid #cc6600; /* ← #ac13bd から変更 */
             border-radius: 999px;
-            box-shadow: 0 0 0 2px rgba(58, 106, 191, 0.2);
+            box-shadow: 0 0 0 2px rgba(255, 144, 48, 0.2); /* ← 青系から変更 */
         }
 
         .console-info div {
@@ -723,7 +714,6 @@
 
         .wifi-combined .btn-wifi {
             border-radius: 0 !important;
-            /* border-left: 1px solid #ffffff !important; */
             white-space: nowrap;
             padding: 7px 12px;
         }
@@ -740,14 +730,14 @@
 
         .wifi-host-input:focus {
             outline: none;
-            border-color: #ff7fdd;
-            box-shadow: 0 0 0 2px rgba(127, 168, 255, 0.18);
+            border-color: #ff9030; /* ← #ff7fdd から変更 */
+            box-shadow: 0 0 0 2px rgba(255, 144, 48, 0.18); /* ← 青系から変更 */
         }
 
-.btn-wifi.active {
-            --btn-border: #bf4fbb;
+        .btn-wifi.active {
+            --btn-border: #ff9030; /* ← #bf4fbb から変更 */
             --btn-bg: #14241a;
-            --btn-glow: rgba(191, 79, 184, 0.35);
+            --btn-glow: rgba(255, 144, 48, 0.35); /* ← 紫系から変更 */
         }
 
         @media (max-width: 720px) {
@@ -771,29 +761,29 @@
             }
 
             .wifi-combined {
-            display: flex;
-            align-items: center;
-            border: 1px solid #ffffff;
-            border-radius: 6px;
-            overflow: hidden;
-            background: #ffffff;
-        }
+                display: flex;
+                align-items: center;
+                border: 1px solid #ffffff;
+                border-radius: 6px;
+                overflow: hidden;
+                background: #ffffff;
+            }
 
-        .wifi-combined .wifi-host-input {
-            border: none !important;
-            border-radius: 0 !important;
-            box-shadow: none !important;
-            flex: 1;
-        }
+            .wifi-combined .wifi-host-input {
+                border: none !important;
+                border-radius: 0 !important;
+                box-shadow: none !important;
+                flex: 1;
+            }
 
-        .wifi-combined .btn-wifi {
-            border-radius: 0 !important;
-            border-left: 1px solid #ffffff !important;
-            white-space: nowrap;
-            padding: 7px 12px;
-        }
+            .wifi-combined .btn-wifi {
+                border-radius: 0 !important;
+                border-left: 1px solid #ffffff !important;
+                white-space: nowrap;
+                padding: 7px 12px;
+            }
 
-        .wifi-host-input {
+            .wifi-host-input {
                 flex: 1 1 180px;
                 min-width: 200px;
                 max-width: 250px;
@@ -853,7 +843,7 @@
 
         /* センサーボタン active */
         .btn-sensor.active {
-            background-color: #3a6abf;
+            background-color: #ff9030; /* ← #3a6abf から変更（青系排除） */
             color: #ffffff;
         }
 
@@ -869,19 +859,15 @@
         }
 
         .rc-panel {
-            /* background: linear-gradient(160deg, #434852, #3a3f48); */
-            /* border: 1px solid #5e646f; */
             border-radius: 18px;
             padding: 14px;
             margin-bottom: 20px;
             padding-left: 3%;
             display: flex;
             gap: 18px;
-            /* box-shadow: 0 12px 26px rgba(0, 0, 0, 0.22), inset 0 1px 0 rgba(255, 255, 255, 0.05); */
         }
 
         .rc-pad{
-            /* background: radial-gradient(circle at 50% 40%, #f1fbff, #d8f3ff); */
             box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
         }
 
@@ -894,34 +880,24 @@
             color: #000000;
             margin-top : -10px;
             font-size: 20px;
-            /* font-size: medium; */
         }
-
-        /* body {
-            background: #eaf4ff;
-        } */
 
         .controls,
         .run-controls {
-            /* background: linear-gradient(165deg, #484d57, #3b4049); */
-            /* border: 1px solid #5f6671; */
             border-radius: 14px;
             padding: 12px;
-            /* box-shadow: 0 8px 18px rgba(0, 0, 0, 0.05); */
         }
 
         .line-sensor-section,
         .graph-container,
         .table-container {
             background: #f7fcff;
-            /* border: 1px solid #ff00ae; */
             border-radius: 12px;
             box-shadow: 0 8px 22px rgba(73, 183, 255, 0.14);
         }
 
         .console-info {
             background: #232833;
-            /* border-color: #4b535f; */
         }
 
         .wifi-combined {
@@ -973,12 +949,10 @@
 
         #realtimeBtn .switch-label {
             color: #000000 !important;
-            /* text-shadow: 0 1px 1px rgba(0, 0, 0, 0.35); */
         }
 
         .switch-label {
             color: #000000 !important;
-            /* text-shadow: 0 1px 1px rgba(0, 0, 0, 0.25); */
         }
     </style>
 </head>
@@ -1504,11 +1478,10 @@
             const hasLine = maxSensorValue > 0;
             
             for (let i = 0; i < 24; i++) {
-                // センサーiの中心角度を計算（0番センサーの中心を0度に、真上を0度にするため-90度オフセット）
                 const centerAngle = ((i * 360 / 24) - 90) * Math.PI / 180;
-                const halfWidth = (360 / 24 / 2) * Math.PI / 180; // セグメント幅の半分（7.5度）
-                const angle = centerAngle - halfWidth; // セグメント開始角度
-                const nextAngle = centerAngle + halfWidth; // セグメント終了角度
+                const halfWidth = (360 / 24 / 2) * Math.PI / 180;
+                const angle = centerAngle - halfWidth;
+                const nextAngle = centerAngle + halfWidth;
                 const x1 = centerX + outerRadius * Math.cos(angle);
                 const y1 = centerY + outerRadius * Math.sin(angle);
                 const x2 = centerX + outerRadius * Math.cos(nextAngle);
@@ -1576,7 +1549,7 @@
                 svg.insertBefore(pseudoLine, svg.firstChild);
             }
             
-            // 逃げる方向に矢印を表示
+            // 逃げる方向に矢印を表示（#50ff50 → #ff9030 に変更）
             if (hasLine && Number.isFinite(meta.escapeDirection)) {
                 const escapeAngle = degToRadFromTop(meta.escapeDirection);
                 const arrowLength = getDistanceScaledLength(meta.lineDistance, outerRadius);
@@ -1599,18 +1572,17 @@
                 arrowLine.setAttribute('y1', centerY);
                 arrowLine.setAttribute('x2', shaftEndX);
                 arrowLine.setAttribute('y2', shaftEndY);
-                arrowLine.setAttribute('stroke', '#50ff50');
+                arrowLine.setAttribute('stroke', '#ffffff'); /* ← #50ff50 から変更 */
                 arrowLine.setAttribute('stroke-width', '4');
                 arrowLine.setAttribute('stroke-dasharray', '6,4');
                 svg.appendChild(arrowLine);
                 
                 const arrowHead = document.createElementNS('http://www.w3.org/2000/svg', 'polygon');
                 arrowHead.setAttribute('points', `${arrowX},${arrowY} ${head1X},${head1Y} ${head2X},${head2Y}`);
-                arrowHead.setAttribute('fill', '#50ff50');
+                arrowHead.setAttribute('fill', '#ffffff'); /* ← #50ff50 から変更 */
                 svg.appendChild(arrowHead);
             }
             
-            // ライン方向の角度変化量を表示（前フレームとの差分）
             const changeValue = normalizeAngleDelta(meta.lineDirection, prevMeta.lineDirection);
             if (hasLine && Number.isFinite(meta.lineDirection)) {
                 metaPanel.innerHTML = `
@@ -1897,7 +1869,7 @@
         }
 
         function updateRcInfo() {
-            // Numeric RC readout was removed from the UI; keep this as a no-op hook.
+            // no-op
         }
 
         function normalizeRcSpeedPercent(value) {
@@ -2298,9 +2270,7 @@
             if (pad) {
                 try {
                     pad.setPointerCapture(event.pointerId);
-                } catch (error) {
-                    // Some browsers may reject pointer capture; movement still works.
-                }
+                } catch (error) {}
             }
             setRcVectorFromClientPoint(event.clientX, event.clientY);
             sendRcMove(false);
@@ -2319,9 +2289,7 @@
             if (pad) {
                 try {
                     pad.releasePointerCapture(event.pointerId);
-                } catch (error) {
-                    // ignore
-                }
+                } catch (error) {}
             }
             resetRcVector();
             if (rcMode) {
@@ -2474,7 +2442,7 @@
             const minV = Math.min(...values);
             const range = (maxV - minV) * 1.15 || 1;
             const minDisplay = minV - (maxV - minV) * 0.075;
-            ctx.strokeStyle = '#50b4ff';
+            ctx.strokeStyle = '#ff9030'; /* ← #50b4ff から変更（青系排除） */
             ctx.lineWidth = 2;
             ctx.beginPath();
             data.forEach((point, i) => {
@@ -2484,7 +2452,7 @@
                 else ctx.lineTo(x, y);
             });
             ctx.stroke();
-            ctx.fillStyle = '#50b4ff';
+            ctx.fillStyle = '#ff9030'; /* ← #50b4ff から変更（青系排除） */
             data.forEach((point, i) => {
                 const x = padding + (w - padding - 20) * (i / (data.length - 1));
                 const y = h - 20 - ((point.value - minDisplay) / range) * (h - padding - 20);
@@ -2591,7 +2559,6 @@
             receivingLineState = false;
             realtimeAwaitingResponse = false;
 
-            // マイコン切断時は表示をクリアして状態ズレを防ぐ
             logs = [];
             realtimeHistoryLogs = [];
             sensorNames = [LINE_SENSOR_KEY];
@@ -2607,18 +2574,14 @@
             if (reader) {
                 try {
                     reader.releaseLock();
-                } catch (error) {
-                    // 切断直後は解放失敗することがある
-                }
+                } catch (error) {}
                 reader = null;
             }
 
             if (writer) {
                 try {
                     writer.releaseLock();
-                } catch (error) {
-                    // 切断直後は解放失敗することがある
-                }
+                } catch (error) {}
                 writer = null;
             }
 
@@ -2628,9 +2591,7 @@
             if (port) {
                 try {
                     await port.close();
-                } catch (error) {
-                    // 既にクローズ済みなら無視
-                }
+                } catch (error) {}
                 port = null;
             }
 
@@ -2735,9 +2696,7 @@
                 if (readableStreamClosedPromise) {
                     try {
                         await waitWithTimeout(readableStreamClosedPromise, 300);
-                    } catch (error) {
-                        // reader.cancel() 由来の終了は想定内
-                    }
+                    } catch (error) {}
                     readableStreamClosedPromise = null;
                 }
                 if (currentWriter) {
@@ -2756,9 +2715,7 @@
                 if (writableStreamClosedPromise) {
                     try {
                         await waitWithTimeout(writableStreamClosedPromise, 300);
-                    } catch (error) {
-                        // writer.close() 由来の終了は想定内
-                    }
+                    } catch (error) {}
                     writableStreamClosedPromise = null;
                 }
                 if (port) {
@@ -3057,11 +3014,8 @@
                 addConsoleLog('Loading full logs from device...');
                 const _glBtnS = document.getElementById('getLogsBtn'); if (_glBtnS) _glBtnS.classList.add('loading');
                 try {
-                    // Ensure CSV response is not mixed with stale realtime stream state.
                     await sendSerialCommand('REALTIME OFF', false);
-                } catch (error) {
-                    // If REALTIME OFF fails, still attempt CSV retrieval.
-                }
+                } catch (error) {}
                 sendSerialCommand('GETLOGS_CSV');
             } else {
                 if (realtimeHistoryLogs.length > 0) {
