@@ -145,8 +145,6 @@
 
         button:hover:not(:disabled) {
             transform: scale(1.05);
-            background-color: inherit;
-            color: inherit;
         }
 
         button:active {
@@ -382,7 +380,7 @@
         }
 
         .btn-realtime-switch .switch-track:hover {
-            transform: scale(1.08);
+            /* hover時のscale削除 */
         }
 
         .btn-realtime-switch .switch-track::before {
@@ -971,6 +969,11 @@
 
         #realtimeBtn .switch-label {
             color: #000000 !important;
+        }
+
+        #realtimeBtn:disabled .switch-label,
+        #realtimeBtn[disabled] .switch-label {
+            color: #ffffff !important;
         }
 
         .switch-label {
@@ -1825,6 +1828,10 @@
                     track.style.pointerEvents = serialEnabled ? 'auto' : 'none';
                     track.style.cursor = serialEnabled ? 'pointer' : 'not-allowed';
                     track.style.opacity = serialEnabled ? '' : '0.45';
+                }
+                const label = realtimeBtn.querySelector('.switch-label');
+                if (label) {
+                    label.style.color = serialEnabled ? '' : '#ffffff';
                 }
             }
             if (runControls) {
