@@ -158,7 +158,7 @@
             cursor: not-allowed;
             transform: none !important;
             background-color: #c8c8c8 !important;
-            color: #888888 !important;
+            color: #ffffff !important;
         }
 
         button:disabled:hover {
@@ -364,6 +364,8 @@
             font-weight: 700;
             letter-spacing: 0.2px;
             line-height: 1;
+            pointer-events: none; /* ラベルは完全にクリック不可 */
+            user-select: none;
         }
 
         .btn-realtime-switch .switch-track {
@@ -578,7 +580,7 @@
         .sensor-buttons .btn-sensor:disabled,
         .sensor-buttons .btn-sensor.disabled {
             background-color: #c8c8c8 !important;
-            color: #888888 !important;
+            color: #ffffff !important;
             cursor: not-allowed;
             transform: none !important;
             box-shadow: none !important;
