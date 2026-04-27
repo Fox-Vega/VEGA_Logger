@@ -139,28 +139,30 @@
             color: #ffffff;
             height: 36px;
             box-sizing: border-box;
-            transition: background-color 0.15s ease, transform 0.15s ease, color 0.15s ease;
+            box-shadow: none !important;
+            transition: transform 0.15s ease;
         }
 
-        button:hover {
-            background-color: #3a4458;
+        button:hover:not(:disabled) {
+            transform: scale(1.05);
+            background-color: inherit;
+            color: inherit;
         }
 
         button:active {
-            transform: translateY(0px);
-            color: #ffffff;
+            transform: scale(1.02);
         }
 
         button:disabled {
             opacity: 1;
             cursor: not-allowed;
             transform: none !important;
-            background-color: #b0bac8;
-            color: #ffffff;
+            background-color: #c8c8c8 !important;
+            color: #888888 !important;
         }
 
         button:disabled:hover {
-            background-color: #b0bac8;
+            transform: none !important;
         }
 
         .btn-connect.connected {
@@ -337,10 +339,25 @@
             margin-left: 0;
             background: transparent !important;
             box-shadow: none;
+            /* ボタン全体のpointer-eventsを無効にし、switch-trackのみ有効にする */
+            pointer-events: none;
+            cursor: default;
         }
 
-        .btn-realtime-switch:active {
-            transform: none;
+        .btn-realtime-switch:hover {
+            transform: none !important;
+        }
+
+        .btn-realtime-switch .switch-track {
+            pointer-events: auto;
+            cursor: pointer;
+        }
+
+        .btn-realtime-switch:disabled .switch-track,
+        .btn-realtime-switch[disabled] .switch-track {
+            pointer-events: none;
+            cursor: not-allowed;
+            opacity: 0.5;
         }
 
         .btn-realtime-switch .switch-label {
@@ -560,9 +577,9 @@
 
         .sensor-buttons .btn-sensor:disabled,
         .sensor-buttons .btn-sensor.disabled {
-            opacity: 0.45;
+            background-color: #c8c8c8 !important;
+            color: #888888 !important;
             cursor: not-allowed;
-            filter: grayscale(0.2);
             transform: none !important;
             box-shadow: none !important;
         }
@@ -837,14 +854,12 @@
             color: #ffffff;
         }
 
-        /* Run/Stop ボタン */
-        .btn-run-start { background-color: #ffffff; color: #56ff80; }
-        .btn-run-stop { background-color: #ffffff; color: #ff5b48; }
+        /* Run/Stop ボタン（pastelはAction button emphasisブロックで定義） */
 
         /* センサーボタン active */
         .btn-sensor.active {
-            background-color: #ff9030; /* ← #3a6abf から変更（青系排除） */
-            color: #ffffff;
+            background-color: #ff9030 !important;
+            color: #ffffff !important;
         }
 
         /* Monitor スイッチ active */
@@ -888,6 +903,11 @@
             padding: 12px;
         }
 
+        /* sensor-buttons: left-align with controls by matching padding-left */
+        .sensor-buttons {
+            padding-left: 12px;
+        }
+
         .line-sensor-section,
         .graph-container,
         .table-container {
@@ -926,25 +946,25 @@
             color: #ffffff;
         }
 
-        /* Action button emphasis */
+        /* Action button emphasis - pastel tones */
         #runStartBtn,
         .btn-run-start {
-            background-color: #1f9d46 !important;
-            color: #ffffff !important;
+            background-color: #a8e6b8 !important;
+            color: #2d5a3d !important;
         }
 
         #runStopBtn,
         .btn-run-stop {
-            background-color: #d62828 !important;
-            color: #ffffff !important;
+            background-color: #f0a8a8 !important;
+            color: #6b2020 !important;
         }
 
         #runRcBtn,
         .btn-run-rc,
         .btn-run-rc.active {
-            background-color: #f08c00 !important;
-            border-color: #f08c00 !important;
-            color: #ffffff !important;
+            background-color: #ffd4a0 !important;
+            border-color: transparent !important;
+            color: #7a4000 !important;
         }
 
         #realtimeBtn .switch-label {
@@ -1001,9 +1021,9 @@
             <button class="btn-get-logs" id="getLogsBtn" onclick="requestLogs()" title="Get Logs" style="display:inline-flex;align-items:center;gap:6px;padding:6px 12px;">Get Logs <img src="/assets/images/Download.png" style="height:16px;display:block;filter:brightness(0) invert(1);"></button>
             <button class="btn-clear" id="clearBtn" onclick="clearLogs()">Clear</button>
             <button class="btn-status" id="statusBtn" onclick="requestStatus()">Status</button>
-            <button class="btn-status btn-realtime-switch" id="realtimeBtn" onclick="toggleRealtimeMode()" aria-pressed="false">
+            <button class="btn-status btn-realtime-switch" id="realtimeBtn" aria-pressed="false">
                 <span class="switch-label">Monitor</span>
-                <span class="switch-track"><span class="switch-thumb"></span></span>
+                <span class="switch-track" onclick="toggleRealtimeMode()"><span class="switch-thumb"></span></span>
             </button>
         </div>
 
@@ -1795,7 +1815,16 @@
             if (getLogsBtn) getLogsBtn.disabled = !serialEnabled;
             if (clearBtn) clearBtn.disabled = !serialEnabled;
             if (statusBtn) statusBtn.disabled = !serialEnabled;
-            if (realtimeBtn) realtimeBtn.disabled = !serialEnabled;
+            if (realtimeBtn) {
+                realtimeBtn.disabled = !serialEnabled;
+                // switch-trackのpointer-eventsを直接制御（ボタン全体はpointer-events:none）
+                const track = realtimeBtn.querySelector('.switch-track');
+                if (track) {
+                    track.style.pointerEvents = serialEnabled ? 'auto' : 'none';
+                    track.style.cursor = serialEnabled ? 'pointer' : 'not-allowed';
+                    track.style.opacity = serialEnabled ? '' : '0.45';
+                }
+            }
             if (runControls) {
                 runControls.classList.toggle('hidden', !runVisible);
             }
