@@ -575,15 +575,6 @@
             box-shadow: 0 0 0 2px rgba(255, 144, 48, 0.2); /* ← 青系から変更 */
         }
 
-        .sensor-buttons .btn-sensor:disabled,
-        .sensor-buttons .btn-sensor.disabled {
-            background-color: #c8c8c8 !important;
-            color: #ffffff !important;
-            cursor: not-allowed;
-            transform: none !important;
-            box-shadow: none !important;
-        }
-
         .btn-sensor.active {
             --btn-border: #ffffff;
             --btn-text: #0f2416;
@@ -856,10 +847,26 @@
 
         /* Run/Stop ボタン（pastelはAction button emphasisブロックで定義） */
 
-        /* センサーボタン active */
+        /* センサーボタン：使用可能・未選択（off）→ 淡いオレンジ */
+        .btn-sensor {
+            background-color: #ffd4a0 !important;
+            color: #7a4000 !important;
+        }
+
+        /* センサーボタン active（選択中）→ 濃いオレンジ */
         .btn-sensor.active {
             background-color: #ff9030 !important;
             color: #ffffff !important;
+        }
+
+        /* センサーボタン disabled → ライトグレー */
+        .sensor-buttons .btn-sensor:disabled,
+        .sensor-buttons .btn-sensor.disabled {
+            background-color: #c8c8c8 !important;
+            color: #ffffff !important;
+            cursor: not-allowed;
+            transform: none !important;
+            box-shadow: none !important;
         }
 
         /* Monitor スイッチ active */
@@ -911,9 +918,9 @@
         .line-sensor-section,
         .graph-container,
         .table-container {
-            background: #f7fcff;
+            background: #ffffff;
             border-radius: 12px;
-            box-shadow: 0 8px 22px rgba(73, 183, 255, 0.14);
+            box-shadow: 0 8px 22px rgba(255, 144, 48, 0.10);
         }
 
         .console-info {
@@ -1597,14 +1604,14 @@
                 arrowLine.setAttribute('y1', centerY);
                 arrowLine.setAttribute('x2', shaftEndX);
                 arrowLine.setAttribute('y2', shaftEndY);
-                arrowLine.setAttribute('stroke', '#ffffff'); /* ← #50ff50 から変更 */
+                arrowLine.setAttribute('stroke', '#ff9030'); /* 逃げる方向：オレンジ */
                 arrowLine.setAttribute('stroke-width', '4');
                 arrowLine.setAttribute('stroke-dasharray', '6,4');
                 svg.appendChild(arrowLine);
                 
                 const arrowHead = document.createElementNS('http://www.w3.org/2000/svg', 'polygon');
                 arrowHead.setAttribute('points', `${arrowX},${arrowY} ${head1X},${head1Y} ${head2X},${head2Y}`);
-                arrowHead.setAttribute('fill', '#ffffff'); /* ← #50ff50 から変更 */
+                arrowHead.setAttribute('fill', '#ff9030'); /* 逃げる方向：オレンジ */
                 svg.appendChild(arrowHead);
             }
             
