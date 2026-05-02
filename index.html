@@ -3390,12 +3390,11 @@
             }
 
             const timestamp = Date.now();
-            const frameTimestamp = timestamp + realtimeFrameCounter;
+            const frameTimestamp = timestamp + realtimeFrameCounter++;
             setRealtimeBallFrame([
-                { seq: realtimeFrameCounter, timestamp: frameTimestamp, name: BALL_AZIMUTH_KEY, value: azimuth },
-                { seq: realtimeFrameCounter, timestamp: frameTimestamp, name: BALL_INTENSITY_KEY, value: intensity }
+                { seq: null, timestamp: frameTimestamp, name: BALL_AZIMUTH_KEY, value: azimuth },
+                { seq: null, timestamp: frameTimestamp, name: BALL_INTENSITY_KEY, value: intensity }
             ]);
-            realtimeFrameCounter++;
             sensorNames = DEFAULT_SENSOR_NAMES.slice();
         }
 
