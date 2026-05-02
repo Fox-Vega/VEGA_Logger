@@ -379,10 +379,6 @@
             transform-origin: center;
         }
 
-        .btn-realtime-switch .switch-track:hover {
-            /* hover時のscale削除 */
-        }
-
         .btn-realtime-switch .switch-track::before {
             content: '';
             position: absolute;
@@ -847,10 +843,10 @@
 
         /* Run/Stop ボタン（pastelはAction button emphasisブロックで定義） */
 
-        /* センサーボタン：使用可能・未選択（off）→ 淡いオレンジ */
+        /* センサーボタン：Get Logsと同じ通常色 */
         .btn-sensor {
-            background-color: #ffd4a0 !important;
-            color: #7a4000 !important;
+            background-color: #353535 !important;
+            color: #ffffff !important;
         }
 
         /* センサーボタン active（選択中）→ 濃いオレンジ */
@@ -920,7 +916,6 @@
         .table-container {
             background: #ffffff;
             border-radius: 12px;
-            box-shadow: 0 8px 22px rgba(255, 144, 48, 0.10);
         }
 
         .console-info {
@@ -1033,24 +1028,30 @@
             <button class="btn-get-logs" id="getLogsBtn" onclick="requestLogs()" title="Get Logs" style="display:inline-flex;align-items:center;gap:6px;padding:6px 12px;">Get Logs <img src="/assets/images/Download.png" style="height:16px;display:block;filter:brightness(0) invert(1);"></button>
             <button class="btn-clear" id="clearBtn" onclick="clearLogs()">Clear</button>
             <button class="btn-status" id="statusBtn" onclick="requestStatus()">Status</button>
-            <button class="btn-status btn-realtime-switch" id="realtimeBtn" aria-pressed="false">
+            <button class="btn-status btn-realtime-switch" id="realtimeBtn" aria-pressed="false" onclick="toggleRealtimeMode()">
                 <span class="switch-label">Monitor</span>
-                <span class="switch-track" onclick="toggleRealtimeMode()"><span class="switch-thumb"></span></span>
+                <span class="switch-track"><span class="switch-thumb"></span></span>
             </button>
         </div>
 
         <div class="sensor-buttons" id="sensor-buttons">
-            <button class="btn-sensor" disabled>Line</button>
+            <button class="btn-sensor">Line</button>
         </div>
 
         <div id="line-sensor-section" class="line-sensor-section" style="display: none;">
             <div id="line-sensor-grid" class="line-sensor-grid"></div>
             <div id="line-meta" class="line-meta-panel"></div>
-            <div style="margin-top: 15px; margin-bottom: 10px;">
-                <input type="range" id="data-slider" class="line-slider" min="0" max="0" value="0">
-                <div style="font-size: 11px; color: #999; margin-top: 5px; text-align: center;">
-                    <span id="slider-index">-</span> / <span id="slider-total">-</span>
-                </div>
+        </div>
+
+        <div id="ball-sensor-section" class="line-sensor-section" style="display: none;">
+            <div id="ball-sensor-grid" class="line-sensor-grid"></div>
+            <div id="ball-meta" class="line-meta-panel"></div>
+        </div>
+
+        <div id="line-slider-container" style="margin-top: 15px; margin-bottom: 10px; display: none;">
+            <input type="range" id="data-slider" class="line-slider" min="0" max="0" value="0">
+            <div style="font-size: 11px; color: #999; margin-top: 5px; text-align: center;">
+                <span id="slider-index">-</span> / <span id="slider-total">-</span>
             </div>
         </div>
 
@@ -1061,9 +1062,9 @@
         <div id="graph-section">
             <div class="graph-container">
                 <div style="position: absolute; left: 10px; top: 10px; font-size: 11px; color: #999;">
-                    <div style="position: absolute; top: 0; right: 30px; color: #999;">Max: <span id="maxVal">35.5</span>°C</div>
-                    <div style="position: absolute; top: 140px; right: 30px; color: #999;">Avg: <span id="avgVal">28.3</span>°C</div>
-                    <div style="position: absolute; bottom: 10px; right: 30px; color: #999;">Min: <span id="minVal">22.1</span>°C</div>
+                    <div style="position: absolute; top: 0; right: 30px; color: #999;">Max: <span id="maxVal">35.5</span></div>
+                    <div style="position: absolute; top: 140px; right: 30px; color: #999;">Avg: <span id="avgVal">28.3</span></div>
+                    <div style="position: absolute; bottom: 10px; right: 30px; color: #999;">Min: <span id="minVal">22.1</span></div>
                 </div>
                 <canvas id="graphCanvas"></canvas>
             </div>
@@ -1106,19 +1107,29 @@
         const LINE_DIRECTION_KEY = 'LD';
         const ESCAPE_DIRECTION_KEY = 'ED';
         const LINE_DISTANCE_KEY = 'LM';
+        const BALL_AZIMUTH_KEY = 'BA';
+        const BALL_INTENSITY_KEY = 'BI';
         const LINE_SENSOR_ALIASES = ['LineSensor', 'LS'];
         const LINE_SENSOR_PACKED_ALIASES = ['LineSensorPacked', 'LB'];
         const LINE_DIRECTION_ALIASES = ['LineDirection', 'LD'];
         const ESCAPE_DIRECTION_ALIASES = ['EscapeDirection', 'ED'];
         const LINE_DISTANCE_ALIASES = ['LineDistance', 'LM'];
-        const LINE_DIAMETER = 2400;
+        const BALL_AZIMUTH_ALIASES = ['BallAzimuth', 'BA'];
+        const BALL_INTENSITY_ALIASES = ['BallIntensity', 'BI'];
+        const LINE_DIAMETER = 120;
         const SERIAL_BAUD_RATE = 230400;
         const MAX_CONSOLE_LINES = 300;
         const REALTIME_KEEP_FRAME_COUNT = 3;
         const LOG_GAP_REFETCH_MAX_RETRIES = 3;
+        const BALL_SENSOR_KEY = 'Ball';
+        const DEFAULT_SENSOR_NAMES = [LINE_SENSOR_KEY, BALL_SENSOR_KEY];
+        const SENSOR_RENDER_ORDER = [BALL_SENSOR_KEY, LINE_SENSOR_KEY];
+
+        mockData[LINE_SENSOR_KEY] = Array.from({ length: 24 }, (_, index) => ({ index, value: 0 }));
+        mockData[BALL_SENSOR_KEY] = [{ mockFrame: true, seq: 0, timestamp: 0, azimuth: 0, intensity: 20 }];
 
         let logs = [];
-        let sensorNames = [LINE_SENSOR_KEY];
+        let sensorNames = DEFAULT_SENSOR_NAMES.slice();
         let currentSensor = null;
         let receivingCSV = false;
         let currentDataIndex = 0;
@@ -1129,10 +1140,13 @@
         let realtimeMode = false;
         let realtimeAwaitingResponse = false;
         let receivingLineState = false;
+        let receivingBallState = false;
         let receivedLogKeys = new Set();
         let realtimeHistoryLogs = [];
+        let hasGetLogsData = false;
         let realtimeFrameCounter = 0;
         let lineMonitorUsesRealtime = false;
+        let suppressAutoSelectSensor = false;
         const RC_PAD_RADIUS = 75;
         const RC_STICK_RADIUS = 53;
         const RC_SEND_INTERVAL_MS = 500;
@@ -1165,8 +1179,31 @@
         let wirelessHealthFailCount = 0;
 
         const sensorColors = {
-            [LINE_SENSOR_KEY]: '#ff8b00'
+            [LINE_SENSOR_KEY]: '#ff8b00',
+            [BALL_SENSOR_KEY]: '#ff9030'
         };
+
+        function getSensorDisplayName(sensorName) {
+            if (sensorName === LINE_SENSOR_KEY) return 'Line';
+            if (sensorName === BALL_SENSOR_KEY) return 'Ball';
+            return sensorName;
+        }
+
+        function getSensorSortIndex(sensorName) {
+            const index = SENSOR_RENDER_ORDER.indexOf(sensorName);
+            return index >= 0 ? index : SENSOR_RENDER_ORDER.length;
+        }
+
+        function getRenderableSensorNames() {
+            return sensorNames.slice().sort((left, right) => {
+                const leftIndex = getSensorSortIndex(left);
+                const rightIndex = getSensorSortIndex(right);
+                if (leftIndex !== rightIndex) {
+                    return leftIndex - rightIndex;
+                }
+                return left.localeCompare(right);
+            });
+        }
 
         function isAlias(name, aliases) {
             return aliases.includes(name);
@@ -1268,21 +1305,53 @@
             realtimeHistoryLogs.push(...frameEntries);
             logs.push(...frameEntries);
             receivedLogKeys = new Set(logs.map(buildLogKey));
-            currentDataIndex = Math.max(0, getAllLineSensorAnchors().length - 1);
             lineMonitorUsesRealtime = true;
             if (!sensorNames.includes(LINE_SENSOR_KEY)) {
-                sensorNames = [LINE_SENSOR_KEY];
+                sensorNames = DEFAULT_SENSOR_NAMES.slice();
+            }
+            // リアルタイムモードでラインセンサーが選択されていなければ自動選択
+            if (!currentSensor && !suppressAutoSelectSensor) {
+                currentSensor = LINE_SENSOR_KEY;
+                renderSensorButtons();
+            }
+            trimRealtimeHistory();
+            currentDataIndex = Math.max(0, getAllLineSensorAnchors().length - 1);
+        }
+
+        function setRealtimeBallFrame(entries) {
+            const frameEntries = entries.map(entry => ({ ...entry }));
+            realtimeHistoryLogs.push(...frameEntries);
+            logs.push(...frameEntries);
+            receivedLogKeys = new Set(logs.map(buildLogKey));
+            if (!sensorNames.includes(BALL_SENSOR_KEY)) {
+                sensorNames.push(BALL_SENSOR_KEY);
+            }
+            // リアルタイムモードでボールセンサーが選択されていなければ自動選択
+            if (!currentSensor && !suppressAutoSelectSensor) {
+                currentSensor = BALL_SENSOR_KEY;
+                renderSensorButtons();
+            }
+            trimRealtimeHistory();
+            if (currentSensor === BALL_SENSOR_KEY) {
+                currentDataIndex = Math.max(0, getBallFrameAnchors().length - 1);
             }
         }
 
         function trimRealtimeHistory() {
-            if (!Number.isFinite(lastLogSequence)) {
-                return;
+            // リアルタイムフレームは seq=null なので timestamp ベースでトリミング
+            const rtEntries = logs.filter(entry => entry.seq === null && entry.timestamp !== undefined);
+            // フレームのタイムスタンプセットを取得（フレーム単位でグループ化）
+            const frameTimestamps = [...new Set(rtEntries.map(e => e.timestamp))].sort((a, b) => a - b);
+            if (frameTimestamps.length > REALTIME_KEEP_FRAME_COUNT) {
+                const cutoff = frameTimestamps[frameTimestamps.length - REALTIME_KEEP_FRAME_COUNT];
+                logs = logs.filter(entry => !(entry.seq === null && Number.isFinite(entry.timestamp) && entry.timestamp < cutoff));
+                receivedLogKeys = new Set(logs.map(buildLogKey));
             }
-            const minSeqToKeep = Math.max(0, lastLogSequence - (REALTIME_KEEP_FRAME_COUNT - 1));
-            logs = logs.filter(entry => !Number.isFinite(entry.seq) || entry.seq >= minSeqToKeep);
-            receivedLogKeys = new Set(logs.map(buildLogKey));
-            currentDataIndex = Math.max(0, getAllLineSensorAnchors().length - 1);
+            if (currentSensor === BALL_SENSOR_KEY) {
+                currentDataIndex = Math.max(0, getBallFrameAnchors().length - 1);
+            } else {
+                currentDataIndex = Math.max(0, getAllLineSensorAnchors().length - 1);
+            }
         }
 
         function updateRealtimeButton() {
@@ -1304,17 +1373,25 @@
         function restoreRealtimeHistory() {
             logs = realtimeHistoryLogs.map(entry => ({ ...entry }));
             receivedLogKeys = new Set(logs.map(buildLogKey));
-            currentDataIndex = Math.max(0, getAllLineSensorAnchors().length - 1);
+            if (currentSensor === BALL_SENSOR_KEY) {
+                currentDataIndex = Math.max(0, getBallFrameAnchors().length - 1);
+            } else {
+                currentDataIndex = Math.max(0, getAllLineSensorAnchors().length - 1);
+            }
             renderSensorButtons();
             const slider = document.getElementById('data-slider');
             if (slider) {
-                slider.disabled = getAllLineSensorAnchors().length === 0;
+                const anchors = currentSensor === BALL_SENSOR_KEY ? getBallFrameAnchors() : getAllLineSensorAnchors();
+                slider.disabled = anchors.length === 0;
             }
             updateDisplay();
         }
 
         async function stopRealtimeMode() {
             realtimeMode = false;
+            updateRealtimeButton();
+            receivingLineState = false;
+            receivingBallState = false;
             if (port && writer) {
                 try {
                     await sendSerialCommand('REALTIME OFF', false);
@@ -1323,8 +1400,21 @@
                 }
             }
             realtimeAwaitingResponse = false;
-            restoreRealtimeHistory();
-            updateRealtimeButton();
+            renderSensorButtons();
+            if (hasGetLogsData) {
+                restoreRealtimeHistory();
+            } else {
+                logs = [];
+                sensorNames = DEFAULT_SENSOR_NAMES.slice();
+                currentSensor = null;
+                currentDataIndex = 0;
+                receivedLogKeys = new Set();
+                lineMonitorUsesRealtime = false;
+                realtimeHistoryLogs = [];
+                renderSensorButtons();
+                updateSlider();
+                updateDisplay();
+            }
         }
 
         async function startRealtimeMode() {
@@ -1336,12 +1426,14 @@
             realtimeFrameCounter = 0;
             realtimeMode = true;
             updateRealtimeButton();
+            renderSensorButtons();
             try {
                 await sendSerialCommand('REALTIME ON', false);
             } catch (error) {
                 addConsoleLog('Failed to enable Monitor mode: ' + error);
                 realtimeMode = false;
                 updateRealtimeButton();
+                renderSensorButtons();
                 return;
             }
             realtimeAwaitingResponse = false;
@@ -1375,7 +1467,7 @@
 
         function getLineSensorData() {
             const anchors = getLineFrameAnchors();
-            if (anchors.length === 0) return [];
+            if (anchors.length === 0) return mockData[LINE_SENSOR_KEY] || [];
 
             const dataIndex = Math.min(currentDataIndex, anchors.length - 1);
             const anchor = anchors[dataIndex];
@@ -1408,6 +1500,65 @@
             return getLineFrameAnchors();
         }
 
+        function getBallFrameAnchors() {
+            const ordered = getOrderedLogs();
+            const anchors = [];
+            const seenFrames = new Set();
+
+            ordered.forEach(entry => {
+                if (entry.name !== BALL_AZIMUTH_KEY && entry.name !== BALL_INTENSITY_KEY) {
+                    return;
+                }
+
+                const frameKey = hasSequence(entry) ? `seq:${entry.seq}` : `ts:${entry.timestamp}`;
+                if (seenFrames.has(frameKey)) {
+                    return;
+                }
+
+                seenFrames.add(frameKey);
+                anchors.push(entry);
+            });
+
+            return anchors.length > 0 ? anchors : (mockData[BALL_SENSOR_KEY] || []);
+        }
+
+        function getBallFrameByAnchor(anchor, nextAnchor) {
+            if (anchor && anchor.mockFrame) {
+                return anchor;
+            }
+            const ordered = getOrderedLogs();
+            const frameEntries = ordered.filter(entry => {
+                if (hasSequence(anchor) && hasSequence(entry)) {
+                    if (entry.seq < anchor.seq) return false;
+                    if (nextAnchor && hasSequence(nextAnchor) && entry.seq >= nextAnchor.seq) return false;
+                    return true;
+                }
+                return entry.timestamp === anchor.timestamp;
+            });
+
+            const azimuth = frameEntries.find(entry => entry.name === BALL_AZIMUTH_KEY);
+            const intensity = frameEntries.find(entry => entry.name === BALL_INTENSITY_KEY);
+
+            return {
+                azimuth: azimuth ? azimuth.value : null,
+                intensity: intensity ? intensity.value : null,
+                seq: anchor && Number.isFinite(anchor.seq) ? anchor.seq : null,
+                timestamp: anchor ? anchor.timestamp : null
+            };
+        }
+
+        function getLatestBallFrame() {
+            const anchors = getBallFrameAnchors();
+            if (anchors.length === 0) {
+                return null;
+            }
+
+            const targetIndex = anchors.length - 1;
+            const anchor = anchors[targetIndex];
+            const nextAnchor = anchors[targetIndex + 1] || null;
+            return getBallFrameByAnchor(anchor, nextAnchor);
+        }
+
         function getLineMetaByAnchor(anchor, nextAnchor) {
             const ordered = getOrderedLogs();
             const frameEntries = ordered.filter(entry => {
@@ -1432,12 +1583,6 @@
 
         function hasLineLogs() {
             return getLineFrameAnchors().length > 0;
-        }
-
-        function activateLineViewIfAvailable() {
-            if (hasLineLogs() && isSensorSelectable(LINE_SENSOR_KEY)) {
-                currentSensor = LINE_SENSOR_KEY;
-            }
         }
 
         function normalizeAngleDelta(currentDeg, previousDeg) {
@@ -1483,8 +1628,40 @@
             const meta = targetAnchor !== null ? getLineMetaByAnchor(targetAnchor, anchors[targetIndex + 1] || null) : { lineDirection: null, escapeDirection: null, lineDistance: null, seq: null, timestamp: null };
             const prevMeta = prevAnchor !== null ? getLineMetaByAnchor(prevAnchor, anchors[targetIndex] || null) : { lineDirection: null };
             if (data.length === 0) {
-                grid.textContent = 'No line sensor data available.';
-                metaPanel.textContent = '';
+                const containerDiv = document.createElement('div');
+                containerDiv.className = 'line-sensor-circle-container';
+                const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+                svg.classList.add('line-sensor-svg');
+                svg.setAttribute('viewBox', '0 0 300 300');
+                const centerX = 150, centerY = 150;
+                const innerRadius = 100, outerRadius = 120;
+                for (let i = 0; i < 24; i++) {
+                    const centerAngle = ((i * 360 / 24) - 90) * Math.PI / 180;
+                    const halfWidth = (360 / 24 / 2) * Math.PI / 180;
+                    const angle = centerAngle - halfWidth;
+                    const nextAngle = centerAngle + halfWidth;
+                    const x1 = centerX + outerRadius * Math.cos(angle);
+                    const y1 = centerY + outerRadius * Math.sin(angle);
+                    const x2 = centerX + outerRadius * Math.cos(nextAngle);
+                    const y2 = centerY + outerRadius * Math.sin(nextAngle);
+                    const x3 = centerX + innerRadius * Math.cos(nextAngle);
+                    const y3 = centerY + innerRadius * Math.sin(nextAngle);
+                    const x4 = centerX + innerRadius * Math.cos(angle);
+                    const y4 = centerY + innerRadius * Math.sin(angle);
+                    const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+                    path.setAttribute('d', `M ${x1} ${y1} A ${outerRadius} ${outerRadius} 0 0 1 ${x2} ${y2} L ${x3} ${y3} A ${innerRadius} ${innerRadius} 0 0 0 ${x4} ${y4} Z`);
+                    path.setAttribute('class', 'line-sensor-cell line-sensor-cell-inactive');
+                    svg.appendChild(path);
+                }
+                const centerDot = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+                centerDot.setAttribute('cx', centerX);
+                centerDot.setAttribute('cy', centerY);
+                centerDot.setAttribute('r', '5');
+                centerDot.setAttribute('fill', '#2b2b2b');
+                svg.appendChild(centerDot);
+                containerDiv.appendChild(svg);
+                grid.appendChild(containerDiv);
+                metaPanel.innerHTML = '<div class="line-meta-row"><span class="line-meta-label">ライン有無</span><span class="line-meta-value">なし</span></div>';
                 return;
             }
             const containerDiv = document.createElement('div');
@@ -1561,13 +1738,13 @@
                 arrowLine.setAttribute('y1', centerY);
                 arrowLine.setAttribute('x2', shaftEndX);
                 arrowLine.setAttribute('y2', shaftEndY);
-                arrowLine.setAttribute('stroke', '#ff8b00');
+                arrowLine.setAttribute('stroke', '#000000');
                 arrowLine.setAttribute('stroke-width', '4');
                 svg.appendChild(arrowLine);
                 
                 const arrowHead = document.createElementNS('http://www.w3.org/2000/svg', 'polygon');
                 arrowHead.setAttribute('points', `${arrowX},${arrowY} ${head1X},${head1Y} ${head2X},${head2Y}`);
-                arrowHead.setAttribute('fill', '#ff8b00');
+                arrowHead.setAttribute('fill', '#000000');
                 svg.appendChild(arrowHead);
 
                 const pseudoLine = document.createElementNS('http://www.w3.org/2000/svg', 'line');
@@ -1575,7 +1752,7 @@
                 pseudoLine.setAttribute('y1', pseudoLineY1);
                 pseudoLine.setAttribute('x2', pseudoLineX2);
                 pseudoLine.setAttribute('y2', pseudoLineY2);
-                pseudoLine.setAttribute('stroke', '#fff');
+                pseudoLine.setAttribute('stroke', '#000000');
                 pseudoLine.setAttribute('stroke-width', '5');
                 pseudoLine.setAttribute('stroke-linecap', 'round');
                 svg.insertBefore(pseudoLine, svg.firstChild);
@@ -2344,25 +2521,69 @@
 
         function renderSensorButtons() {
             const container = document.getElementById('sensor-buttons');
-            container.innerHTML = '';
-            sensorNames.forEach(sensorName => {
-                const button = document.createElement('button');
-                const selectable = isSensorSelectable(sensorName);
-                button.className = 'btn-sensor' + (sensorName === currentSensor ? ' active' : '') + (selectable ? '' : ' disabled');
-                button.textContent = sensorName === LINE_SENSOR_KEY ? 'Line' : sensorName;
-                button.dataset.sensorName = sensorName;
-                button.disabled = !selectable;
-                button.addEventListener('click', () => selectSensor(button, sensorName));
-                container.appendChild(button);
-            });
+            const names = getRenderableSensorNames();
+
+            // 既存ボタンのsensorNameセットと順序を確認
+            const existing = Array.from(container.querySelectorAll('.btn-sensor'));
+            const existingNames = existing.map(b => b.dataset.sensorName);
+            const needRebuild = names.length !== existingNames.length
+                || names.some((n, i) => n !== existingNames[i]);
+
+            if (needRebuild) {
+                // センサー構成が変わった時だけ再生成
+                container.innerHTML = '';
+                names.forEach(sensorName => {
+                    const button = document.createElement('button');
+                    const selectable = isSensorSelectable(sensorName);
+                    button.className = 'btn-sensor'
+                        + (sensorName === currentSensor ? ' active' : '')
+                        + (selectable ? '' : ' disabled');
+                    button.textContent = getSensorDisplayName(sensorName);
+                    button.dataset.sensorName = sensorName;
+                    button.disabled = !selectable;
+                    button.addEventListener('click', () => selectSensor(button, sensorName));
+                    container.appendChild(button);
+                });
+            } else {
+                // 構成が同じなら状態だけ更新（DOMは維持）
+                existing.forEach(button => {
+                    const sensorName = button.dataset.sensorName;
+                    const selectable = isSensorSelectable(sensorName);
+                    button.disabled = !selectable;
+                    button.className = 'btn-sensor'
+                        + (sensorName === currentSensor ? ' active' : '')
+                        + (selectable ? '' : ' disabled');
+                });
+            }
         }
 
         function isSensorSelectable(sensorName) {
             if (sensorName === LINE_SENSOR_KEY) {
+                if (realtimeMode) {
+                    return true;
+                }
                 if (lineMonitorUsesRealtime && !isSerialConnected()) {
                     return false;
                 }
+                // MonitorがOFFかつログ未取得の場合は無効
+                if (!hasGetLogsData) {
+                    return false;
+                }
                 return getLineFrameAnchors().length > 0;
+            }
+            if (sensorName === BALL_SENSOR_KEY) {
+                if (realtimeMode) {
+                    return true;
+                }
+                // MonitorがOFFかつログ未取得の場合は無効
+                if (!hasGetLogsData) {
+                    return false;
+                }
+                const anchors = getBallFrameAnchors();
+                return anchors.length > 0 && !anchors[0].mockFrame;
+            }
+            if (!hasGetLogsData) {
+                return false;
             }
             return getSensorData(sensorName).length > 0;
         }
@@ -2383,6 +2604,7 @@
             if (!currentSensor) {
                 document.getElementById('graph-section').style.display = 'none';
                 document.getElementById('line-sensor-section').style.display = 'none';
+                document.getElementById('ball-sensor-section').style.display = 'none';
                 document.getElementById('select-sensor-msg').textContent = 'Select sensor to display';
                 document.getElementById('select-sensor-msg').style.display = 'block';
                 return;
@@ -2393,26 +2615,73 @@
                 renderSensorButtons();
                 document.getElementById('graph-section').style.display = 'none';
                 document.getElementById('line-sensor-section').style.display = 'none';
+                document.getElementById('ball-sensor-section').style.display = 'none';
                 document.getElementById('select-sensor-msg').textContent = 'Select sensor to display';
                 document.getElementById('select-sensor-msg').style.display = 'block';
                 return;
             }
 
             const isLine = currentSensor === LINE_SENSOR_KEY;
+            const isBall = currentSensor === BALL_SENSOR_KEY;
             if (isLine && lineMonitorUsesRealtime && !isSerialConnected()) {
                 document.getElementById('graph-section').style.display = 'none';
                 document.getElementById('line-sensor-section').style.display = 'none';
+                document.getElementById('ball-sensor-section').style.display = 'none';
                 document.getElementById('select-sensor-msg').textContent = 'Connect serial to view live line monitor data.';
                 document.getElementById('select-sensor-msg').style.display = 'block';
                 return;
             }
-            const data = isLine ? getLineSensorData() : getSensorData(currentSensor);
             document.getElementById('log-count').textContent = logs.length;
             document.getElementById('sensor-count').textContent = sensorNames.length;
             document.getElementById('seq-gap-count').textContent = sequenceGapCount;
+            if (isBall) {
+                const anchors = getBallFrameAnchors();
+                if (anchors.length === 0) {
+                    document.getElementById('graph-section').style.display = 'none';
+                    document.getElementById('line-sensor-section').style.display = 'none';
+                    document.getElementById('ball-sensor-section').style.display = 'none';
+                    document.getElementById('select-sensor-msg').textContent = 'No ball sensor data available.';
+                    document.getElementById('select-sensor-msg').style.display = 'block';
+                    return;
+                }
+
+                const dataIndex = Math.min(currentDataIndex, anchors.length - 1);
+                const anchor = anchors[dataIndex];
+                const nextAnchor = dataIndex + 1 < anchors.length ? anchors[dataIndex + 1] : null;
+                const ballFrame = getBallFrameByAnchor(anchor, nextAnchor);
+                if (!ballFrame || !Number.isFinite(ballFrame.azimuth) || !Number.isFinite(ballFrame.intensity) || ballFrame.intensity === 0) {
+                    document.getElementById('graph-section').style.display = 'none';
+                    document.getElementById('line-sensor-section').style.display = 'none';
+                    document.getElementById('ball-sensor-section').style.display = 'none';
+                    document.getElementById('select-sensor-msg').textContent = 'No ball sensor data available.';
+                    document.getElementById('select-sensor-msg').style.display = 'block';
+                    return;
+                }
+
+                document.getElementById('select-sensor-msg').style.display = 'none';
+                document.getElementById('graph-section').style.display = 'none';
+                document.getElementById('line-sensor-section').style.display = 'none';
+                document.getElementById('ball-sensor-section').style.display = 'block';
+                updateSlider();
+                renderBallSensorPanel(ballFrame);
+                return;
+            }
+
+            if (isLine && realtimeMode && getLineFrameAnchors().length === 0) {
+                document.getElementById('graph-section').style.display = 'none';
+                document.getElementById('line-sensor-section').style.display = 'block';
+                document.getElementById('ball-sensor-section').style.display = 'none';
+                document.getElementById('select-sensor-msg').style.display = 'none';
+                renderLineSensorGrid();
+                updateSlider();
+                return;
+            }
+
+            const data = isLine ? getLineSensorData() : getSensorData(currentSensor);
             if (data.length === 0) {
                 document.getElementById('graph-section').style.display = 'none';
                 document.getElementById('line-sensor-section').style.display = 'none';
+                document.getElementById('ball-sensor-section').style.display = 'none';
                 document.getElementById('select-sensor-msg').textContent = 'No data for ' + currentSensor + '.';
                 document.getElementById('select-sensor-msg').style.display = 'block';
                 return;
@@ -2421,12 +2690,23 @@
             if (isLine) {
                 document.getElementById('graph-section').style.display = 'none';
                 document.getElementById('line-sensor-section').style.display = 'block';
+                document.getElementById('ball-sensor-section').style.display = 'none';
                 updateSlider();
                 renderLineSensorGrid();
                 return;
             }
             document.getElementById('graph-section').style.display = 'block';
             document.getElementById('line-sensor-section').style.display = 'none';
+            document.getElementById('ball-sensor-section').style.display = 'none';
+            if (isLine && realtimeMode && getLineFrameAnchors().length === 0) {
+                document.getElementById('graph-section').style.display = 'none';
+                document.getElementById('line-sensor-section').style.display = 'block';
+                document.getElementById('ball-sensor-section').style.display = 'none';
+                document.getElementById('select-sensor-msg').style.display = 'none';
+                renderLineSensorGrid();
+                updateSlider();
+                return;
+            }
             const values = data.map(d => d.value);
             const maxVal = Math.max(...values).toFixed(1);
             const minVal = Math.min(...values).toFixed(1);
@@ -2436,6 +2716,76 @@
             document.getElementById('avgVal').textContent = avgVal;
             updateTable(data);
             drawGraph(data);
+        }
+
+        function renderBallSensorPanel(ballFrame) {
+            const grid = document.getElementById('ball-sensor-grid');
+            const metaPanel = document.getElementById('ball-meta');
+            grid.innerHTML = '';
+
+            const containerDiv = document.createElement('div');
+            containerDiv.className = 'line-sensor-circle-container';
+            const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+            svg.classList.add('line-sensor-svg');
+            svg.setAttribute('viewBox', '0 0 300 300');
+
+            const centerX = 150;
+            const centerY = 150;
+            const outerRadius = 118;
+            const angle = degToRadFromTop(ballFrame.azimuth);
+            
+            // 強度1で最大距離118、強度30で灰色の円に触れる(16)、強度40以上で最小距離10
+            const intensity = clamp(ballFrame.intensity, 1, 120);
+            let ballDistance;
+            if (intensity <= 30) {
+                const ratio = (intensity - 1) / (30 - 1);  // 1→0, 30→1
+                ballDistance = 118 - ratio * (118 - 16);
+            } else {
+                const ratio = (intensity - 30) / (40 - 30);  // 30→0, 40→1
+                ballDistance = 16 - Math.min(ratio, 1) * (16 - 10);
+            }
+            const ballRadius = 4;
+            const ballX = centerX + ballDistance * Math.cos(angle);
+            const ballY = centerY + ballDistance * Math.sin(angle);
+
+            // 中心の大きめの灰色の円
+            const centerDot = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+            centerDot.setAttribute('cx', centerX);
+            centerDot.setAttribute('cy', centerY);
+            centerDot.setAttribute('r', '16');
+            centerDot.setAttribute('fill', '#808080');
+            svg.appendChild(centerDot);
+
+            // 距離がわかる内側の薄いリング
+            [40, 70, 100].forEach(radius => {
+                const ring = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+                ring.setAttribute('cx', centerX);
+                ring.setAttribute('cy', centerY);
+                ring.setAttribute('r', String(radius));
+                ring.setAttribute('fill', 'none');
+                ring.setAttribute('stroke', '#c8c8c8');
+                ring.setAttribute('stroke-width', '0.75');
+                ring.setAttribute('opacity', '0.55');
+                svg.appendChild(ring);
+            });
+
+            const tipBall = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+            tipBall.setAttribute('cx', ballX);
+            tipBall.setAttribute('cy', ballY);
+            tipBall.setAttribute('r', '6');
+            tipBall.setAttribute('fill', '#ff9030');
+            svg.appendChild(tipBall);
+
+
+
+            metaPanel.innerHTML = `
+                <div class="line-meta-row"><span class="line-meta-label">Ball有無</span><span class="line-meta-value">あり</span></div>
+                <div class="line-meta-row"><span class="line-meta-label">角度</span><span class="line-meta-value">${Math.round(ballFrame.azimuth)}°</span></div>
+                <div class="line-meta-row"><span class="line-meta-label">強度</span><span class="line-meta-value">${Math.round(ballFrame.intensity)}</span></div>
+            `;
+
+            containerDiv.appendChild(svg);
+            grid.appendChild(containerDiv);
         }
 
         function updateTable(data) {
@@ -2487,19 +2837,22 @@
             const minV = Math.min(...values);
             const range = (maxV - minV) * 1.15 || 1;
             const minDisplay = minV - (maxV - minV) * 0.075;
-            ctx.strokeStyle = '#ff9030'; /* ← #50b4ff から変更（青系排除） */
+            const graphColor = sensorColors[currentSensor] || '#ff9030';
+            ctx.strokeStyle = graphColor;
             ctx.lineWidth = 2;
             ctx.beginPath();
             data.forEach((point, i) => {
-                const x = padding + (w - padding - 20) * (i / (data.length - 1));
+                const xRatio = data.length > 1 ? i / (data.length - 1) : 0.5;
+                const x = padding + (w - padding - 20) * xRatio;
                 const y = h - 20 - ((point.value - minDisplay) / range) * (h - padding - 20);
                 if (i === 0) ctx.moveTo(x, y);
                 else ctx.lineTo(x, y);
             });
             ctx.stroke();
-            ctx.fillStyle = '#ff9030'; /* ← #50b4ff から変更（青系排除） */
+            ctx.fillStyle = graphColor;
             data.forEach((point, i) => {
-                const x = padding + (w - padding - 20) * (i / (data.length - 1));
+                const xRatio = data.length > 1 ? i / (data.length - 1) : 0.5;
+                const x = padding + (w - padding - 20) * xRatio;
                 const y = h - 20 - ((point.value - minDisplay) / range) * (h - padding - 20);
                 ctx.beginPath();
                 ctx.arc(x, y, 3, 0, Math.PI * 2);
@@ -2508,9 +2861,17 @@
         }
 
         function updateSlider() {
-            const anchors = getAllLineSensorAnchors();
+            const anchors = currentSensor === BALL_SENSOR_KEY ? getBallFrameAnchors() : getAllLineSensorAnchors();
             const slider = document.getElementById('data-slider');
+            const sliderContainer = document.getElementById('line-slider-container');
             if (!slider) return;
+            if (sliderContainer) {
+                const showSlider = !realtimeMode
+                    && currentSensor !== null
+                    && (currentSensor === LINE_SENSOR_KEY || currentSensor === BALL_SENSOR_KEY)
+                    && anchors.length > 0;
+                sliderContainer.style.display = showSlider ? 'block' : 'none';
+            }
             slider.disabled = anchors.length === 0;
             slider.max = Math.max(0, anchors.length - 1);
             slider.value = Math.min(currentDataIndex, anchors.length - 1);
@@ -2536,8 +2897,10 @@
             }
 
             const slider = document.getElementById('data-slider');
-            const section = document.getElementById('line-sensor-section');
-            if (!slider || !section || section.style.display === 'none' || slider.disabled) {
+            const lineSection = document.getElementById('line-sensor-section');
+            const ballSection = document.getElementById('ball-sensor-section');
+            const isFrameSectionVisible = (lineSection && lineSection.style.display !== 'none') || (ballSection && ballSection.style.display !== 'none');
+            if (!slider || !isFrameSectionVisible || slider.disabled) {
                 return;
             }
 
@@ -2602,11 +2965,12 @@
             keepReading = false;
             receivingCSV = false;
             receivingLineState = false;
+            receivingBallState = false;
             realtimeAwaitingResponse = false;
 
             logs = [];
             realtimeHistoryLogs = [];
-            sensorNames = [LINE_SENSOR_KEY];
+            sensorNames = DEFAULT_SENSOR_NAMES.slice();
             currentSensor = null;
             currentDataIndex = 0;
             lastLogSequence = null;
@@ -2766,12 +3130,14 @@
                 if (port) {
                     try {
                         await port.close();
-                    } catch (error) {
-                        addConsoleLog('Serial port close warning: ' + error);
-                    }
+                    } catch (error) {}
                     port = null;
                 }
+
                 updateSerialStatus(false);
+                renderSensorButtons();
+                updateSlider();
+                updateDisplay();
                 addConsoleLog('Serial disconnected.');
             } finally {
                 serialDisconnecting = false;
@@ -2806,7 +3172,7 @@
             const trimmed = line.trim();
             if (trimmed.length === 0) return;
             const isCSVDataLine = /^\d+,/.test(trimmed) || trimmed.startsWith('i,') || trimmed.startsWith('timestamp');
-            const isProtocolLine = trimmed === '[LOG_START_CSV]' || trimmed === '[LOG_END_CSV]' || trimmed === '[LINE_STATE]' || trimmed === '[LINE_STATE_END]';
+            const isProtocolLine = trimmed === '[LOG_START_CSV]' || trimmed === '[LOG_END_CSV]' || trimmed === '[LINE_STATE]' || trimmed === '[LINE_STATE_END]' || trimmed === '[BALL_STATE]' || trimmed === '[BALL_STATE_END]' || trimmed === '[LOGS_CLEARED]';
             const shouldLogLine = !isCSVDataLine && !isProtocolLine && !(realtimeMode && receivingCSV);
             if (shouldLogLine) {
                 addConsoleLog(trimmed);
@@ -2815,6 +3181,7 @@
                 receivingCSV = true;
                 const _glBtn = document.getElementById('getLogsBtn'); if (_glBtn) _glBtn.classList.add('loading');
                 receivingLineState = false;
+                receivingBallState = false;
                 return;
             }
             if (trimmed === '[LOG_END_CSV]') {
@@ -2837,6 +3204,7 @@
                 }
                 csvGapRefetchRetryCount = 0;
                 if (logs.some(entry => Number.isFinite(entry.seq))) {
+                    hasGetLogsData = true;
                     if (sequenceGapCount === 0) {
                         addConsoleLog('Full log retrieval complete: all sequences are continuous.');
                     } else {
@@ -2844,29 +3212,63 @@
                     }
                 }
                 realtimeAwaitingResponse = false;
-                activateLineViewIfAvailable();
                 updateSensorAfterReceive();
                 return;
             }
             if (trimmed === '[LINE_STATE]') {
+                if (!realtimeMode) {
+                    receivingLineState = false;
+                    receivingBallState = false;
+                    return;
+                }
                 receivingLineState = true;
+                receivingBallState = false;
                 return;
             }
             if (trimmed === '[LINE_STATE_END]') {
+                if (!realtimeMode) {
+                    receivingLineState = false;
+                    return;
+                }
                 receivingLineState = false;
-                activateLineViewIfAvailable();
                 updateSensorAfterReceive();
+                return;
+            }
+            if (trimmed === '[BALL_STATE]') {
+                if (!realtimeMode) {
+                    receivingBallState = false;
+                    receivingLineState = false;
+                    return;
+                }
+                receivingBallState = true;
+                receivingLineState = false;
+                return;
+            }
+            if (trimmed === '[BALL_STATE_END]') {
+                if (!realtimeMode) {
+                    receivingBallState = false;
+                    return;
+                }
+                receivingBallState = false;
+                updateDisplay();
+                return;
+            }
+            if (realtimeMode && receivingBallState) {
+                parseBallStateLine(trimmed);
                 return;
             }
             if (trimmed === '[LOGS_CLEARED]') {
                 logs = [];
-                sensorNames = [LINE_SENSOR_KEY];
+                sensorNames = DEFAULT_SENSOR_NAMES.slice();
                 currentSensor = null;
                 lastLogSequence = null;
                 sequenceGapCount = 0;
                 csvGapRefetchSinceSequence = null;
                 csvGapRefetchRetryCount = 0;
                 receivedLogKeys = new Set();
+                hasGetLogsData = false;
+                lineMonitorUsesRealtime = false;
+                suppressAutoSelectSensor = true;
                 renderSensorButtons();
                 updateDisplay();
                 return;
@@ -2879,7 +3281,7 @@
                 parseCSVLine(trimmed);
                 return;
             }
-            if (receivingLineState) {
+            if (realtimeMode && receivingLineState) {
                 parseLineStateLine(trimmed);
                 return;
             }
@@ -2912,10 +3314,14 @@
                 : isAlias(name, LINE_DIRECTION_ALIASES) ? LINE_DIRECTION_KEY
                 : isAlias(name, ESCAPE_DIRECTION_ALIASES) ? ESCAPE_DIRECTION_KEY
                 : isAlias(name, LINE_DISTANCE_ALIASES) ? LINE_DISTANCE_KEY
+                : isAlias(name, BALL_AZIMUTH_ALIASES) ? BALL_AZIMUTH_KEY
+                : isAlias(name, BALL_INTENSITY_ALIASES) ? BALL_INTENSITY_KEY
                 : name;
             rememberLogEntry({ seq: Number.isFinite(seq) ? seq : null, timestamp, name: normalizedName, value });
             if ((normalizedName === LINE_SENSOR_KEY || normalizedName === LINE_SENSOR_PACKED_KEY) && !sensorNames.includes(LINE_SENSOR_KEY)) {
                 sensorNames.push(LINE_SENSOR_KEY);
+            } else if ((normalizedName === BALL_AZIMUTH_KEY || normalizedName === BALL_INTENSITY_KEY) && !sensorNames.includes(BALL_SENSOR_KEY)) {
+                sensorNames.push(BALL_SENSOR_KEY);
             }
         }
 
@@ -2932,10 +3338,14 @@
                     : isAlias(name, LINE_DIRECTION_ALIASES) ? LINE_DIRECTION_KEY
                     : isAlias(name, ESCAPE_DIRECTION_ALIASES) ? ESCAPE_DIRECTION_KEY
                     : isAlias(name, LINE_DISTANCE_ALIASES) ? LINE_DISTANCE_KEY
+                    : isAlias(name, BALL_AZIMUTH_ALIASES) ? BALL_AZIMUTH_KEY
+                    : isAlias(name, BALL_INTENSITY_ALIASES) ? BALL_INTENSITY_KEY
                     : name;
                 rememberLogEntry({ seq: Number.isFinite(seq) ? seq : null, timestamp, name: normalizedName, value });
                 if ((normalizedName === LINE_SENSOR_KEY || normalizedName === LINE_SENSOR_PACKED_KEY) && !sensorNames.includes(LINE_SENSOR_KEY)) {
                     sensorNames.push(LINE_SENSOR_KEY);
+                } else if ((normalizedName === BALL_AZIMUTH_KEY || normalizedName === BALL_INTENSITY_KEY) && !sensorNames.includes(BALL_SENSOR_KEY)) {
+                    sensorNames.push(BALL_SENSOR_KEY);
                 }
             } catch (error) {
                 console.warn('Invalid JSON line:', jsonLine);
@@ -2964,7 +3374,29 @@
                 { seq: null, timestamp: frameTimestamp, name: ESCAPE_DIRECTION_KEY, value: escapeDirection },
                 { seq: null, timestamp: frameTimestamp, name: LINE_DISTANCE_KEY, value: magnitude }
             ]);
-            sensorNames = [LINE_SENSOR_KEY];
+            sensorNames = DEFAULT_SENSOR_NAMES.slice();
+        }
+
+        function parseBallStateLine(line) {
+            const parts = line.split(',');
+            if (parts.length < 2) {
+                return;
+            }
+
+            const azimuth = Number(parts[0]);
+            const intensity = Number(parts[1]);
+            if (!Number.isFinite(azimuth) || !Number.isFinite(intensity)) {
+                return;
+            }
+
+            const timestamp = Date.now();
+            const frameTimestamp = timestamp + realtimeFrameCounter;
+            setRealtimeBallFrame([
+                { seq: realtimeFrameCounter, timestamp: frameTimestamp, name: BALL_AZIMUTH_KEY, value: azimuth },
+                { seq: realtimeFrameCounter, timestamp: frameTimestamp, name: BALL_INTENSITY_KEY, value: intensity }
+            ]);
+            realtimeFrameCounter++;
+            sensorNames = DEFAULT_SENSOR_NAMES.slice();
         }
 
         function finalizeReceivedLogs() {
@@ -2980,9 +3412,8 @@
                 return;
             }
             finalizeReceivedLogs();
-            activateLineViewIfAvailable();
-            if (!sensorNames.includes(currentSensor) && sensorNames.length > 0) {
-                currentSensor = sensorNames[0];
+            if (currentSensor && !isSensorSelectable(currentSensor)) {
+                currentSensor = null;
             }
             renderSensorButtons();
             updateDisplay();
@@ -3042,10 +3473,11 @@
             }
             if (port && writer) {
                 logs = [];
-                sensorNames = [LINE_SENSOR_KEY];
+                sensorNames = DEFAULT_SENSOR_NAMES.slice();
                 currentSensor = null;
                 currentDataIndex = 0;
                 receivingCSV = false;
+                hasGetLogsData = false;
                 lastLogSequence = null;
                 sequenceGapCount = 0;
                 csvGapRefetchSinceSequence = null;
@@ -3077,15 +3509,17 @@
                 sendSerialCommand('CLEAR');
             } else {
                 logs = [];
-                sensorNames = [LINE_SENSOR_KEY];
+                sensorNames = DEFAULT_SENSOR_NAMES.slice();
                 currentSensor = null;
                 currentDataIndex = 0;
+                hasGetLogsData = false;
                 lastLogSequence = null;
                 sequenceGapCount = 0;
                 csvGapRefetchSinceSequence = null;
                 csvGapRefetchRetryCount = 0;
                 receivedLogKeys = new Set();
                 lineMonitorUsesRealtime = false;
+                suppressAutoSelectSensor = true;
                 renderSensorButtons();
                 updateDisplay();
                 addConsoleLog('Logs cleared.');
@@ -3104,6 +3538,8 @@
             if (!isSensorSelectable(sensorName)) {
                 return;
             }
+
+            suppressAutoSelectSensor = false;
 
             if (currentSensor === sensorName) {
                 currentSensor = null;
