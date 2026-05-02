@@ -532,12 +532,20 @@
             position: relative;
             z-index: 1;
             pointer-events: auto;
+            /* ノブ半径(8px)分だけ両端を内側に収める */
+            box-sizing: border-box;
+            padding-left: 8px;
+            padding-right: 8px;
+        }
+
+        .line-slider::-webkit-slider-container {
+            overflow: visible;
         }
 
         .line-slider::-webkit-slider-runnable-track {
             height: 6px;
-            background: #ff9030; /* ← #ff00e6 から変更 */
-            border: 1px solid #e07820; /* ← #ff00cc から変更 */
+            background: #333333;
+            border: none;
             border-radius: 999px;
             box-shadow: none;
         }
@@ -545,30 +553,35 @@
         .line-slider::-webkit-slider-thumb {
             -webkit-appearance: none;
             appearance: none;
-            margin-top: -6px;
+            margin-top: -5px;
             width: 16px;
             height: 16px;
             border-radius: 50%;
-            background: #cc6600; /* ← #bf3abf から変更 */
-            border: 2px solid #ff9030; /* ← #ff00f2 から変更 */
-            box-shadow: 0 0 0 2px rgba(255, 144, 48, 0.2); /* ← 青系から変更 */
+            background: #ff9030;
+            border: none;
+            box-shadow: none;
         }
 
         .line-slider::-moz-range-track {
             height: 6px;
-            background: #ff9030; /* ← #ffffff から変更 */
-            border: 1px solid #e07820; /* ← #ffffff から変更 */
+            background: #333333;
+            border: none;
             border-radius: 999px;
             box-shadow: none;
+        }
+
+        .line-slider:focus,
+        .line-slider:focus-visible {
+            outline: none;
         }
 
         .line-slider::-moz-range-thumb {
             width: 16px;
             height: 16px;
             border-radius: 50%;
-            background: #353535;
-            border: 2px solid #ff9030; /* ← #1a3060 から変更 */
-            box-shadow: 0 0 0 2px rgba(255, 144, 48, 0.2); /* ← 青系から変更 */
+            background: #ff9030;
+            border: none;
+            box-shadow: none;
         }
 
         .btn-sensor.active {
@@ -645,8 +658,8 @@
         }
 
         .console-info {
-            background-color: #1e2230;
-            border: 1px solid #1e2230;
+            background-color: #353535;
+            border: 1px solid #353535;
             border-radius: 3px;
             padding: 15px;
             margin-top: 20px;
@@ -656,7 +669,7 @@
             font-size: 11px;
             color: #ffffff;
             scrollbar-width: thin;
-            scrollbar-color: #ffffff #1e2230;
+            scrollbar-color: #ffffff #353535;
             display: none;
         }
 
@@ -665,8 +678,8 @@
         }
 
         .console-info::-webkit-scrollbar-track {
-            background: #2b2b2b;
-            border-left: 1px solid #444;
+            background: #353535;
+            border-left: 1px solid #555;
         }
 
         .console-info::-webkit-scrollbar-thumb {
@@ -919,7 +932,7 @@
         }
 
         .console-info {
-            background: #232833;
+            background: #353535;
         }
 
         .wifi-combined {
@@ -1519,7 +1532,7 @@
                 anchors.push(entry);
             });
 
-            return anchors.length > 0 ? anchors : (mockData[BALL_SENSOR_KEY] || []);
+            return anchors.length > 0 ? anchors : (realtimeMode ? [] : (mockData[BALL_SENSOR_KEY] || []));
         }
 
         function getBallFrameByAnchor(anchor, nextAnchor) {
@@ -1738,13 +1751,13 @@
                 arrowLine.setAttribute('y1', centerY);
                 arrowLine.setAttribute('x2', shaftEndX);
                 arrowLine.setAttribute('y2', shaftEndY);
-                arrowLine.setAttribute('stroke', '#000000');
+                arrowLine.setAttribute('stroke', '#555555');
                 arrowLine.setAttribute('stroke-width', '4');
                 svg.appendChild(arrowLine);
                 
                 const arrowHead = document.createElementNS('http://www.w3.org/2000/svg', 'polygon');
                 arrowHead.setAttribute('points', `${arrowX},${arrowY} ${head1X},${head1Y} ${head2X},${head2Y}`);
-                arrowHead.setAttribute('fill', '#000000');
+                arrowHead.setAttribute('fill', '#555555');
                 svg.appendChild(arrowHead);
 
                 const pseudoLine = document.createElementNS('http://www.w3.org/2000/svg', 'line');
@@ -1752,7 +1765,7 @@
                 pseudoLine.setAttribute('y1', pseudoLineY1);
                 pseudoLine.setAttribute('x2', pseudoLineX2);
                 pseudoLine.setAttribute('y2', pseudoLineY2);
-                pseudoLine.setAttribute('stroke', '#000000');
+                pseudoLine.setAttribute('stroke', '#555555');
                 pseudoLine.setAttribute('stroke-width', '5');
                 pseudoLine.setAttribute('stroke-linecap', 'round');
                 svg.insertBefore(pseudoLine, svg.firstChild);
@@ -2636,7 +2649,9 @@
             document.getElementById('seq-gap-count').textContent = sequenceGapCount;
             if (isBall) {
                 const anchors = getBallFrameAnchors();
-                if (anchors.length === 0) {
+                // リアルタイムモード時はmockFrameのみの場合は表示しない
+                const hasRealData = anchors.some(a => !a.mockFrame);
+                if (anchors.length === 0 || (realtimeMode && !hasRealData)) {
                     document.getElementById('graph-section').style.display = 'none';
                     document.getElementById('line-sensor-section').style.display = 'none';
                     document.getElementById('ball-sensor-section').style.display = 'none';
@@ -2753,7 +2768,7 @@
             centerDot.setAttribute('cx', centerX);
             centerDot.setAttribute('cy', centerY);
             centerDot.setAttribute('r', '16');
-            centerDot.setAttribute('fill', '#808080');
+            centerDot.setAttribute('fill', '#353535');
             svg.appendChild(centerDot);
 
             // 距離がわかる内側の薄いリング
